@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { QUICK_TRY_URLS } from "@/lib/constants";
 import { normalizeUrl } from "@/lib/utils";
+import { encodeUrlParam } from "@/lib/url-helpers";
 import { toast } from "sonner";
 
 export function LandingHero() {
@@ -24,15 +25,16 @@ export function LandingHero() {
 
     setIsLoading(true);
     const normalizedUrl = normalizeUrl(url.trim());
+    const encodedUrl = encodeUrlParam(normalizedUrl);
 
-    // Use router.push for navigation
-    router.push(`/?url=${encodeURIComponent(normalizedUrl)}`);
+    // Clean URL like: ?url=github.com instead of ?url=https%3A%2F%2Fgithub.com
+    router.push(`/?url=${encodedUrl}`);
   };
 
   const handleQuickTry = (quickUrl: string) => {
     setIsLoading(true);
-    const normalizedUrl = normalizeUrl(quickUrl);
-    router.push(`/?url=${encodeURIComponent(normalizedUrl)}`);
+    // Quick try URLs are already simple like "github.com"
+    router.push(`/?url=${quickUrl}`);
   };
 
   return (

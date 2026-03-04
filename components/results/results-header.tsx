@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { encodeUrlParam } from "@/lib/url-helpers";
 import {
   Tooltip,
   TooltipContent,

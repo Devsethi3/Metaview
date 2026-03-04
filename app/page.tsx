@@ -9,6 +9,7 @@ import { LandingFooter } from "@/components/landing/footer";
 import { RecentChecks } from "@/components/landing/recent-checks";
 import { ResultsWrapper } from "@/components/results/results-wrapper";
 import { Header } from "@/components/shared/header";
+import { decodeUrlParam } from "@/lib/url-helpers";
 
 interface PageProps {
   searchParams: Promise<{ url?: string }>;
@@ -17,7 +18,12 @@ interface PageProps {
 export default async function HomePage({ searchParams }: PageProps) {
   // Await the searchParams in Next.js 15
   const params = await searchParams;
-  const urlToAnalyze = params.url;
+  const urlParam = params.url;
+
+  // Decode the URL param back to full URL
+  // Input: "github.com" or "github.com/vercel/next.js"
+  // Output: "https://github.com" or "https://github.com/vercel/next.js"
+  const urlToAnalyze = urlParam ? decodeUrlParam(urlParam) : null;
 
   // If URL is provided, show results page
   if (urlToAnalyze) {
