@@ -1,10 +1,10 @@
-// components/landing/recent-checks.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useAnalysisStore } from "@/stores/analysis-store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { encodeUrlParam } from "@/lib/url-helpers";
 import {
   Clock,
   ExternalLink,
@@ -73,7 +73,7 @@ export function RecentChecks() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Link
-                          href={`/?url=${encodeURIComponent(item.url)}`}
+                          href={`/?url=${encodeUrlParam(item.url)}`}
                           className="font-medium truncate hover:text-primary transition-colors"
                         >
                           {extractDomain(item.url)}
