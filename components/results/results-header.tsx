@@ -53,7 +53,9 @@ export function ResultsHeader({ result }: ResultsHeaderProps) {
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      // Generate clean shareable URL
+      const cleanUrl = `${window.location.origin}/?url=${encodeUrlParam(result.url)}`;
+      await navigator.clipboard.writeText(cleanUrl);
       toast.success("Link copied to clipboard");
     } catch {
       toast.error("Failed to copy link");
@@ -61,11 +63,8 @@ export function ResultsHeader({ result }: ResultsHeaderProps) {
   };
 
   const handleShareTwitter = () => {
-    const text = generateShareText(
-      result.url,
-      result.score.total,
-      result.score.grade,
-    );
+    const cleanUrl = `${window.location.origin}/?url=${encodeUrlParam(result.url)}`;
+    const text = `🚀 My site scored ${result.score.total}/100 (${result.score.grade}) on Metaview!\n\nCheck your link previews → ${cleanUrl}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(twitterUrl, "_blank", "noopener,noreferrer");
   };
