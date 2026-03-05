@@ -1,40 +1,106 @@
 // components/landing/hero.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { QUICK_TRY_URLS } from "@/lib/constants";
-import { normalizeUrl } from "@/lib/utils";
 import { encodeUrlParam } from "@/lib/url-helpers";
-import { toast } from "sonner";
+import { validateUrl, looksLikeUrl } from "@/lib/validation";
+import { cn } from "@/lib/utils";
 
 export function LandingHero() {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
   const router = useRouter();
+
+  const handleValidation = useCallback(
+    (value: string, showError: boolean = true) => {
+      if (!value.trim()) {
+        if (showError && touched) {
+          setError("Please enter a URL to analyze");
+        }
+        return false;
+      }
+
+      const validation = validateUrl(value);
+
+      if (!validation.isValid) {
+        if (showError) {
+          setError(validation.error || "Invalid URL");
+        }
+        return false;
+      }
+
+      setError(null);
+      return validation;
+    },
+    [touched],
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim()) {
-      toast.error("Please enter a URL");
+    setTouched(true);
+
+    const validation = handleValidation(url, true);
+
+    if (!validation) {
+      return;
+    }
+
+    const result = validateUrl(url);
+    if (!result.isValid || !result.normalizedUrl) {
+      setError(result.error || "Invalid URL");
       return;
     }
 
     setIsLoading(true);
-    const normalizedUrl = normalizeUrl(url.trim());
-    const encodedUrl = encodeUrlParam(normalizedUrl);
+    setError(null);
 
-    // Clean URL like: ?url=github.com instead of ?url=https%3A%2F%2Fgithub.com
+    const encodedUrl = encodeUrlParam(result.normalizedUrl);
     router.push(`/?url=${encodedUrl}`);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUrl(value);
+
+    // Clear error when user starts typing again
+    if (error && value.trim()) {
+      // Only validate on change if it looks like a URL
+      if (looksLikeUrl(value)) {
+        const validation = validateUrl(value);
+        if (validation.isValid) {
+          setError(null);
+        }
+      } else {
+        setError(null);
+      }
+    }
+  };
+
+  const handleInputBlur = () => {
+    setTouched(true);
+    if (url.trim() && !looksLikeUrl(url)) {
+      setError("Please enter a valid URL (e.g., example.com)");
+    }
   };
 
   const handleQuickTry = (quickUrl: string) => {
     setIsLoading(true);
-    // Quick try URLs are already simple like "github.com"
+    setError(null);
     router.push(`/?url=${quickUrl}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit(e as unknown as React.FormEvent);
+    }
   };
 
   return (
@@ -48,9 +114,10 @@ export function LandingHero() {
       <div className="container mx-auto px-4 py-16 md:py-24 lg:py-32">
         <div className="max-w-3xl mx-auto text-center space-y-8">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <Sparkles className="h-3.5 w-3.5" />
-            Free & Open Source
+          <div className="flex justify-center">
+            <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-medium text-primary">
+              Free & Open Source
+            </span>
           </div>
 
           {/* Headline */}
@@ -63,43 +130,63 @@ export function LandingHero() {
           {/* Subheadline */}
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
             See how your links appear on X, LinkedIn, Discord, Slack, WhatsApp,
-            Telegram, Facebook, and Google Search — all on one page. Get a score
-            out of 100 and copy-paste fixes.
+            Telegram, Facebook, and Google Search — all on one page.
           </p>
 
           {/* URL Input Form */}
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto"
+            className="flex flex-col gap-2 max-w-xl mx-auto"
           >
-            <div className="relative flex-1">
-              <Input
-                type="text"
-                placeholder="Enter any URL to analyze..."
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="h-12 text-base pr-4 pl-4"
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder="Enter any URL to analyze..."
+                  value={url}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  onKeyDown={handleKeyDown}
+                  className={cn(
+                    "h-12 text-base pr-4 pl-4 transition-colors",
+                    error &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
+                  disabled={isLoading}
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "url-error" : undefined}
+                />
+              </div>
+              <Button
+                type="submit"
+                size="lg"
+                className="h-12 px-6"
                 disabled={isLoading}
-              />
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    Analyze
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
             </div>
-            <Button
-              type="submit"
-              size="lg"
-              className="h-12 px-6"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  Analyze
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
+
+            {/* Error message */}
+            {error && (
+              <div
+                id="url-error"
+                className="flex items-center gap-2 text-sm text-destructive animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
           </form>
 
           {/* Quick try links */}
@@ -108,9 +195,10 @@ export function LandingHero() {
             {QUICK_TRY_URLS.map((quickUrl) => (
               <button
                 key={quickUrl}
+                type="button"
                 onClick={() => handleQuickTry(quickUrl)}
                 disabled={isLoading}
-                className="text-primary hover:underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-primary hover:underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
               >
                 {quickUrl}
               </button>

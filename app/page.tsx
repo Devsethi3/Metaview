@@ -1,4 +1,3 @@
-// app/page.tsx
 import { Suspense } from "react";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingFeatures } from "@/components/landing/features";
@@ -29,7 +28,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   if (urlToAnalyze) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        {/* <Header /> */}
         <main className="flex-1">
           <Suspense fallback={<ResultsLoadingSkeleton />}>
             <ResultsWrapper url={urlToAnalyze} />

@@ -13,12 +13,11 @@ import {
   Copy,
   ArrowRight,
   Image as ImageIcon,
-  ExternalLink,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
 import { TwitterPreview } from "../previews/twitter-preview";
 import { extractDomain } from "@/lib/utils";
+import { goeyToast } from "goey-toast";
 
 interface TwitterTabProps {
   result: AnalysisResult;
@@ -40,9 +39,9 @@ export function TwitterTab({ result }: TwitterTabProps) {
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard`);
+      goeyToast.success(`${label} copied to clipboard`);
     } catch {
-      toast.error("Failed to copy");
+      goeyToast.error("Failed to copy");
     }
   };
 

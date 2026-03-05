@@ -16,14 +16,17 @@ export function TwitterPreview({ preview }: TwitterPreviewProps) {
     <div className="border rounded-2xl overflow-hidden bg-white dark:bg-black">
       {/* Image */}
       {preview.image ? (
-        <div className="aspect-[1.91/1] bg-muted relative">
+        <div className="aspect-[1.91/1] bg-muted relative overflow-hidden">
           <img
             src={preview.image}
             alt=""
             className="w-full h-full object-cover"
+            loading="lazy"
             onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.nextElementSibling?.classList.remove("hidden");
+              const target = e.currentTarget;
+              target.style.display = "none";
+              const fallback = target.nextElementSibling as HTMLElement;
+              if (fallback) fallback.classList.remove("hidden");
             }}
           />
           <div className="hidden absolute inset-0 flex items-center justify-center bg-muted">

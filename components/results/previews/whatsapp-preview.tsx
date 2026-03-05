@@ -13,25 +13,30 @@ export function WhatsAppPreview({ preview }: WhatsAppPreviewProps) {
   const domain = extractDomain(preview.url);
 
   return (
-    <div className="bg-[#025c4c] dark:bg-[#1f2c34] rounded-lg overflow-hidden max-w-sm">
+    <div className="bg-[#025c4c] dark:bg-[#1f2c34] rounded-lg overflow-hidden max-w-xs">
       <div className="flex gap-3 p-2">
         {/* Thumbnail */}
-        {preview.image ? (
-          <div className="w-16 h-16 rounded overflow-hidden shrink-0 bg-[#128c7e]">
+        <div className="w-16 h-16 rounded overflow-hidden shrink-0 bg-[#128c7e] flex items-center justify-center">
+          {preview.image ? (
             <img
               src={preview.image}
               alt=""
               className="w-full h-full object-cover"
+              loading="lazy"
               onError={(e) => {
-                e.currentTarget.style.display = "none";
+                const target = e.currentTarget;
+                target.style.display = "none";
+                const fallback = target.nextElementSibling as HTMLElement;
+                if (fallback) fallback.classList.remove("hidden");
               }}
             />
-          </div>
-        ) : (
-          <div className="w-16 h-16 rounded bg-[#128c7e] flex items-center justify-center shrink-0">
+          ) : null}
+          <div
+            className={`${preview.image ? "hidden" : ""} flex items-center justify-center`}
+          >
             <ImageIcon className="h-6 w-6 text-white/50" />
           </div>
-        )}
+        </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0 py-1">

@@ -10,7 +10,6 @@ import type { AnalysisResult, Platform, PlatformPreview } from "@/types";
 import { PLATFORMS } from "@/lib/constants";
 import { extractDomain } from "@/lib/utils";
 
-// Platform preview components
 import { GooglePreview } from "../previews/google-preview";
 import { TwitterPreview } from "../previews/twitter-preview";
 import { LinkedInPreview } from "../previews/linkedin-preview";
@@ -281,7 +280,7 @@ export function PreviewsTab({ result }: PreviewsTabProps) {
     <div className="space-y-6">
       {/* Filters and view toggle */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={filter === "all" ? "default" : "outline"}
             size="sm"
@@ -315,18 +314,20 @@ export function PreviewsTab({ result }: PreviewsTabProps) {
           </Button>
         </div>
 
-        <ToggleGroup
-          type="single"
-          value={viewMode}
-          onValueChange={(v) => v && setViewMode(v as ViewMode)}
-        >
-          <ToggleGroupItem value="grid" aria-label="Grid view">
-            <Grid className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="list" aria-label="List view">
-            <List className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <div className="hidden md:block">
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(v) => v && setViewMode(v as ViewMode)}
+          >
+            <ToggleGroupItem value="grid" aria-label="Grid view">
+              <Grid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="list" aria-label="List view">
+              <List className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
 
       {/* Preview cards */}

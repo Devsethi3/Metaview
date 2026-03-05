@@ -1,0 +1,23 @@
+/* Default Global Font will be JetBrains Mono */
+
+html,
+body {
+  font-family: var(--font-dm-sans);
+}
+
+.goey-content {
+  font-family: var(--font-dm-sans);
+}
+
+/* JetBrains Mono */
+.jetbrains-mono {
+  font-family: var(--font-jetbrains-mono);
+}
+.dm-sans {
+  font-family: var(--font-dm-sans);
+}
+
+/* Instrument Serif */
+.instrument-serif {
+  font-family: var(--font-instrument-serif);
+}

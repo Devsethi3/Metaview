@@ -16,14 +16,17 @@ export function LinkedInPreview({ preview }: LinkedInPreviewProps) {
     <div className="border rounded-lg overflow-hidden bg-white dark:bg-[#1d2226]">
       {/* Image */}
       {preview.image ? (
-        <div className="aspect-[1.91/1] bg-muted relative">
+        <div className="aspect-[1.91/1] bg-muted relative overflow-hidden">
           <img
             src={preview.image}
             alt=""
             className="w-full h-full object-cover"
+            loading="lazy"
             onError={(e) => {
-              e.currentTarget.style.display = "none";
-              e.currentTarget.nextElementSibling?.classList.remove("hidden");
+              const target = e.currentTarget;
+              target.style.display = "none";
+              const fallback = target.nextElementSibling as HTMLElement;
+              if (fallback) fallback.classList.remove("hidden");
             }}
           />
           <div className="hidden absolute inset-0 flex items-center justify-center bg-muted">
@@ -38,7 +41,7 @@ export function LinkedInPreview({ preview }: LinkedInPreviewProps) {
 
       {/* Content */}
       <div className="p-3 space-y-1 bg-[#eef3f8] dark:bg-[#38434f]">
-        <div className="text-sm font-semibold text-[#000000e6] dark:text-white line-clamp-2">
+        <div className="text-sm font-semibold text-[#000000e6] dark:text-white line-clamp-2 leading-tight">
           {truncate(preview.title, 100) || "No title"}
         </div>
         <div className="text-xs text-[#00000099] dark:text-[#ffffffb3]">

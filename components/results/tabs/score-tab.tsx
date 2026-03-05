@@ -19,10 +19,10 @@ import {
   Copy,
   Filter,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { AnalysisResult, ScoreCheck, ScoreCategory } from "@/types";
 import { ScoreCircle } from "../score-circle";
 import { GRADE_SCALE } from "@/lib/constants";
+import { goeyToast } from "goey-toast";
 
 interface ScoreTabProps {
   result: AnalysisResult;
@@ -47,9 +47,9 @@ export function ScoreTab({ result }: ScoreTabProps) {
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success("Copied to clipboard");
+      goeyToast.success("Copied to clipboard");
     } catch {
-      toast.error("Failed to copy");
+      goeyToast.error("Failed to copy");
     }
   };
 

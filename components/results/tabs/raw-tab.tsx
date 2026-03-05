@@ -21,8 +21,8 @@ import {
   Code,
   FileJson,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
+import { goeyToast } from "goey-toast";
 
 interface RawTabProps {
   result: AnalysisResult;
@@ -34,9 +34,9 @@ export function RawTab({ result }: RawTabProps) {
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard`);
+      goeyToast.success(`${label} copied to clipboard`);
     } catch {
-      toast.error("Failed to copy");
+      goeyToast.error("Failed to copy");
     }
   };
 
@@ -50,7 +50,7 @@ export function RawTab({ result }: RawTabProps) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast.success(`Downloaded ${filename}`);
+    goeyToast.success(`Downloaded ${filename}`);
   };
 
   // Convert raw tags to CSV

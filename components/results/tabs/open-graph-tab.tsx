@@ -13,8 +13,8 @@ import {
   Image as ImageIcon,
   ExternalLink,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
+import { goeyToast } from "goey-toast";
 
 interface OpenGraphTabProps {
   result: AnalysisResult;
@@ -40,9 +40,9 @@ export function OpenGraphTab({ result }: OpenGraphTabProps) {
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast.success(`${label} copied to clipboard`);
+      goeyToast.success(`${label} copied to clipboard`);
     } catch {
-      toast.error("Failed to copy");
+      goeyToast.error("Failed to copy");
     }
   };
 

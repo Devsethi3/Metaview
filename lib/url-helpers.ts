@@ -1,38 +1,74 @@
 // lib/url-helpers.ts
 /**
  * Encode URL for query parameter - keeps it readable
- * Instead of: https%3A%2F%2Fexample.com
- * We get: example.com (just the domain for simplicity)
  */
 export function encodeUrlParam(url: string): string {
   try {
     const parsed = new URL(url);
-    // Return just hostname + pathname (without trailing slash if it's just "/")
-    const path = parsed.pathname === "/" ? "" : parsed.pathname;
-    const search = parsed.search || "";
-    const result = parsed.hostname + path + search;
+    let result = parsed.hostname;
+
+    if (parsed.pathname && parsed.pathname !== "/") {
+      result += parsed.pathname;
+    }
+
+    if (parsed.search) {
+      result += parsed.search;
+    }
+
+    if (parsed.hash) {
+      result += parsed.hash;
+    }
+
     return result;
   } catch {
-    // If parsing fails, return cleaned input
-    return url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    return url
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .replace(/\/$/, "");
   }
 }
 
 /**
  * Decode URL from query parameter - reconstructs full URL
- * Input: example.com or example.com/path
- * Output: https://example.com or https://example.com/path
  */
 export function decodeUrlParam(param: string): string {
   if (!param) return "";
 
-  // If it already has a protocol, return as-is
   if (param.startsWith("http://") || param.startsWith("https://")) {
     return param;
   }
 
-  // Add https:// protocol
   return `https://${param}`;
+}
+
+/**
+ * Get a reliable favicon URL using Google's favicon service
+ * This bypasses CORS issues and always returns a valid image
+ */
+export function getFaviconUrl(url: string, size: number = 32): string {
+  try {
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const domain = parsed.hostname;
+
+    // Use Google's favicon service - reliable and CORS-free
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+  } catch {
+    // Fallback to Google's favicon service with raw input
+    return `https://www.google.com/s2/favicons?domain=${url}&sz=${size}`;
+  }
+}
+
+/**
+ * Alternative: Use DuckDuckGo's favicon service
+ */
+export function getFaviconUrlDDG(url: string): string {
+  try {
+    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const domain = parsed.hostname;
+    return `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+  } catch {
+    return `https://icons.duckduckgo.com/ip3/${url}.ico`;
+  }
 }
 
 /**
