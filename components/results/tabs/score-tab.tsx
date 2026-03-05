@@ -90,22 +90,19 @@ export function ScoreTab({ result }: ScoreTabProps) {
   return (
     <div className="space-y-6">
       {/* Score Overview */}
-      <Card>
+      {/* <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Score Circle */}
             <div className="flex-shrink-0">
               <ScoreCircle score={score.total} grade={score.grade} size="lg" />
             </div>
 
-            {/* Score Details */}
             <div className="flex-1 text-center md:text-left">
               <h2 className="text-2xl font-bold mb-2">
                 Your Score: {score.total}/100
               </h2>
               <p className="text-muted-foreground mb-4">{gradeInfo.message}</p>
 
-              {/* Status Counts */}
               <div className="flex items-center justify-center md:justify-start gap-6">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -125,7 +122,6 @@ export function ScoreTab({ result }: ScoreTabProps) {
               </div>
             </div>
 
-            {/* Category Breakdown */}
             <div className="grid grid-cols-3 gap-3">
               {score.categories.slice(0, 6).map((cat) => (
                 <div
@@ -140,11 +136,10 @@ export function ScoreTab({ result }: ScoreTabProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Filter Buttons */}
-      <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center flex-wrap gap-2">
         <Button
           variant={filter === "all" ? "default" : "outline"}
           size="sm"
@@ -193,7 +188,7 @@ export function ScoreTab({ result }: ScoreTabProps) {
                 open={openCategories.includes(category.key)}
                 onOpenChange={() => toggleCategory(category.key)}
               >
-                <CollapsibleTrigger asChild>
+                <CollapsibleTrigger asChild className="p-2 m-2">
                   <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">

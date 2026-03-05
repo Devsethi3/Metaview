@@ -16,9 +16,9 @@ export function CacheIndicator({ timestamp, onRefresh }: CacheIndicatorProps) {
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Zap className="h-3.5 w-3.5 text-yellow-500" />
+            <Zap className="h-3.5 w-3.5" />
             <span>
-              Loaded from cache · Analyzed {formatCacheAge(timestamp)}
+              Loaded from cache | {formatCacheAge(timestamp)}
             </span>
           </div>
           <Button

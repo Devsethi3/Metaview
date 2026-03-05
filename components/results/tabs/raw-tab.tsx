@@ -124,7 +124,7 @@ export function RawTab({ result }: RawTabProps) {
   return (
     <div className="space-y-6">
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
           <TabsList>
             <TabsTrigger value="table" className="gap-2">
               <TableIcon className="h-4 w-4" />

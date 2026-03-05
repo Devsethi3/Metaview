@@ -121,16 +121,15 @@ export function LandingHero() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-balance">
-            Preview your previews.{" "}
-            <span className="text-primary">Every platform.</span>{" "}
-            <span className="text-muted-foreground">One click.</span>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl instrument-serif text-balance tracking-wide">
+            Ever wonder how your link looks on{" "}
+            <span className="text-primary">Twitter, Discord, or Slack?</span>
           </h1>
 
           {/* Subheadline */}
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
             See how your links appear on X, LinkedIn, Discord, Slack, WhatsApp,
-            Telegram, Facebook, and Google Search — all on one page.
+            Telegram, Facebook, and Google Search all on one page.
           </p>
 
           {/* URL Input Form */}
@@ -198,7 +197,7 @@ export function LandingHero() {
                 type="button"
                 onClick={() => handleQuickTry(quickUrl)}
                 disabled={isLoading}
-                className="text-primary hover:underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                className="text-primary hover:underline underline-offset-4 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer"
               >
                 {quickUrl}
               </button>

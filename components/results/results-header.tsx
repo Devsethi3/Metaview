@@ -37,6 +37,7 @@ import { extractDomain } from "@/lib/utils";
 import { encodeUrlParam } from "@/lib/url-helpers";
 import type { AnalysisResult } from "@/types";
 import { toast } from "sonner";
+import ThemeToggle from "../ui/theme-toggle";
 
 interface ResultsHeaderProps {
   result: AnalysisResult;
@@ -373,6 +374,8 @@ export function ResultsHeader({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              
+              <ThemeToggle />
 
               {/* New Analysis Button */}
               <Button size="sm" className="h-8" asChild>

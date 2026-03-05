@@ -123,7 +123,7 @@ export function ScoreSummary({ result }: ScoreSummaryProps) {
 
             {/* Grade message */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-muted-foreground">
+              <p className="lg:text-xl text-base">
                 {getGradeMessage(score.grade)}
               </p>
             </div>
