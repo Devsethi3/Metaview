@@ -1,11 +1,25 @@
 // lib/generate-export-image.ts
 import type { AnalysisResult } from "@/types";
 import { extractDomain } from "@/lib/utils";
-import { getGradeColors } from "@/lib/export-utils";
+
+interface ThemeColors {
+  bg: string;
+  cardBg: string;
+  cardBorder: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  accent: string;
+  success: string;
+  warning: string;
+  error: string;
+  ringBg: string;
+}
 
 /**
- * Generate PNG image from analysis result
- * Uses canvas for reliable, theme-independent rendering
+ * Generate a high-fidelity, minimal PNG image from analysis result
+ * Style: Modern Dark Mode SaaS (Linear/Vercel aesthetic)
+ * Dimensions: 1200x630 (Standard Open Graph Size)
  */
 export async function generateExportImage(
   result: AnalysisResult,
@@ -17,179 +31,204 @@ export async function generateExportImage(
     throw new Error("Could not create canvas context");
   }
 
-  // Canvas dimensions (2x for retina)
-  const scale = 2;
-  const width = 600;
-  const height = 400;
-  canvas.width = width * scale;
-  canvas.height = height * scale;
-  ctx.scale(scale, scale);
+  // Standard Open Graph Dimensions
+  const width = 1200;
+  const height = 630;
 
-  // Colors
-  const colors = {
-    bg: "#09090b",
-    cardBg: "#18181b",
-    text: "#fafafa",
-    textMuted: "#a1a1aa",
-    textDim: "#71717a",
-    border: "#27272a",
-    emerald: "#10b981",
-    yellow: "#eab308",
-    orange: "#f97316",
-    red: "#ef4444",
+  // Set actual canvas size (no DPI scaling needed for backend/export generation)
+  canvas.width = width;
+  canvas.height = height;
+
+  // Modern Dark Theme Palette (Zinc/Slate based)
+  const colors: ThemeColors = {
+    bg: "#09090b", // Zinc 950
+    cardBg: "#18181b", // Zinc 900
+    cardBorder: "#27272a", // Zinc 800
+    textPrimary: "#ffffff",
+    textSecondary: "#e4e4e7", // Zinc 200
+    textMuted: "#71717a", // Zinc 500
+    accent: "#fafafa",
+    success: "#10b981", // Emerald 500
+    warning: "#f59e0b", // Amber 500
+    error: "#ef4444", // Red 500
+    ringBg: "#27272a", // Zinc 800
   };
 
-  // Get grade color
-  const getGradeColor = (grade: string): string => {
-    if (grade.startsWith("A")) return colors.emerald;
-    if (grade.startsWith("B")) return colors.yellow;
-    if (grade === "C") return colors.orange;
-    return colors.red;
-  };
+  const score = result.score.total;
+  const domain = extractDomain(result.url);
 
-  // Draw background
-  ctx.fillStyle = colors.bg;
+  // 1. Background Fill
+  // Add a very subtle radial gradient to the center for depth
+  const bgGradient = ctx.createRadialGradient(
+    width / 2,
+    height / 2,
+    0,
+    width / 2,
+    height / 2,
+    width,
+  );
+  bgGradient.addColorStop(0, "#1c1c1f"); // Slightly lighter center
+  bgGradient.addColorStop(1, colors.bg);
+  ctx.fillStyle = bgGradient;
   ctx.fillRect(0, 0, width, height);
 
-  // Draw card background
+  // 2. Main Glass/Card Container
+  const margin = 60;
+  const cardX = margin;
+  const cardY = margin;
+  const cardW = width - margin * 2;
+  const cardH = height - margin * 2;
+
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 20;
+
   ctx.fillStyle = colors.cardBg;
-  roundRect(ctx, 20, 20, width - 40, height - 40, 16);
+  roundRect(ctx, cardX, cardY, cardW, cardH, 24);
   ctx.fill();
 
-  // Draw border
-  ctx.strokeStyle = colors.border;
-  ctx.lineWidth = 1;
-  roundRect(ctx, 20, 20, width - 40, height - 40, 16);
+  // Reset shadow for internal elements
+  ctx.shadowColor = "transparent";
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+
+  // Card Border (Inner Stroke)
+  ctx.strokeStyle = colors.cardBorder;
+  ctx.lineWidth = 2;
+  roundRect(ctx, cardX, cardY, cardW, cardH, 24);
   ctx.stroke();
 
-  // Header - Logo and brand
-  ctx.fillStyle = colors.text;
-  ctx.font = "bold 18px Inter, system-ui, sans-serif";
-  ctx.fillText("Metaview", 48, 60);
+  // ---------------------------------------------------------
+  // Left Side: The Score Ring (Hero)
+  // ---------------------------------------------------------
+  const centerY = height / 2;
+  const leftCenter = cardX + cardW * 0.35; // Left 35%
+  const radius = 100;
 
-  // Logo circle
-  ctx.fillStyle = "#3b82f6";
+  // Draw Ring Background
   ctx.beginPath();
-  ctx.arc(36, 55, 10, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = colors.text;
-  ctx.font = "bold 10px Inter, system-ui, sans-serif";
-  ctx.fillText("M", 32, 59);
+  ctx.arc(leftCenter, centerY, radius, 0, 2 * Math.PI);
+  ctx.strokeStyle = colors.ringBg;
+  ctx.lineWidth = 20;
+  ctx.lineCap = "round";
+  ctx.stroke();
 
-  // Domain
+  // Draw Score Progress Arc
+  const startAngle = -0.5 * Math.PI; // Top
+  const progress = score / 100;
+  const endAngle = startAngle + 2 * Math.PI * progress;
+
+  // Determine Score Color
+  let scoreColor = colors.success;
+  if (score < 50) scoreColor = colors.error;
+  else if (score < 90) scoreColor = colors.warning;
+
+  ctx.beginPath();
+  ctx.arc(leftCenter, centerY, radius, startAngle, endAngle);
+  ctx.strokeStyle = scoreColor;
+  ctx.lineWidth = 20;
+  ctx.stroke();
+
+  // Draw Score Text
+  ctx.fillStyle = colors.textPrimary;
+  ctx.font =
+    "bold 80px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(score.toString(), leftCenter, centerY + 5); // +5 visual optical adjustment
+
+  // Draw "Score" Label below ring
   ctx.fillStyle = colors.textMuted;
-  ctx.font = "14px Inter, system-ui, sans-serif";
-  ctx.fillText(extractDomain(result.url), 48, 90);
+  ctx.font =
+    "500 16px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  ctx.fillText("OPTIMIZATION SCORE", leftCenter, centerY + radius + 45);
 
-  // Score
-  ctx.fillStyle = colors.text;
-  ctx.font = "bold 64px Inter, system-ui, sans-serif";
-  ctx.fillText(result.score.total.toString(), 48, 165);
+  // ---------------------------------------------------------
+  // Divider Line
+  // ---------------------------------------------------------
+  const dividerX = cardX + cardW * 0.65; // Split point
+  ctx.beginPath();
+  ctx.moveTo(dividerX - 100, cardY + 60);
+  ctx.lineTo(dividerX - 100, cardY + cardH - 60);
+  ctx.strokeStyle = colors.cardBorder;
+  ctx.lineWidth = 1;
+  ctx.stroke();
 
-  // Grade badge
-  const gradeX = 48 + ctx.measureText(result.score.total.toString()).width + 16;
-  const gradeColor = getGradeColor(result.score.grade);
-  ctx.fillStyle = gradeColor;
-  roundRect(ctx, gradeX, 125, 50, 36, 8);
-  ctx.fill();
-  ctx.fillStyle = colors.bg;
-  ctx.font = "bold 20px Inter, system-ui, sans-serif";
-  ctx.fillText(result.score.grade, gradeX + 10, 150);
+  // ---------------------------------------------------------
+  // Right Side: Details & Metrics
+  // ---------------------------------------------------------
+  const contentStart = dividerX - 40;
+  ctx.textAlign = "left";
 
-  // Stats row
-  const statsY = 200;
-  const stats = [
-    { label: "Passed", value: result.score.passCount, color: colors.emerald },
-    {
-      label: "Warnings",
-      value: result.score.warningCount,
-      color: colors.yellow,
-    },
-    { label: "Failed", value: result.score.failCount, color: colors.red },
-  ];
+  // 1. URL / Title
+  ctx.fillStyle = colors.textMuted;
+  ctx.font =
+    "600 14px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  ctx.fillText("ANALYSIS REPORT", contentStart, cardY + 100);
 
-  let statsX = 48;
-  stats.forEach((stat) => {
+  ctx.fillStyle = colors.textPrimary;
+  ctx.font =
+    "bold 36px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  // Truncate domain if too long visually
+  const maxTextW = cardW - (contentStart - cardX) - 40;
+  const displayDomain =
+    domain.length > 25 ? domain.substring(0, 24) + "..." : domain;
+  ctx.fillText(displayDomain, contentStart, cardY + 145);
+
+  // 2. Metrics Grid (Passed, Warnings, Failed)
+  const metricsY = centerY + 20;
+  const rowHeight = 60;
+
+  // Helper to draw a metric row
+  const drawMetricRow = (
+    y: number,
+    label: string,
+    count: number,
+    color: string,
+  ) => {
     // Dot
-    ctx.fillStyle = stat.color;
     ctx.beginPath();
-    ctx.arc(statsX + 5, statsY + 8, 5, 0, Math.PI * 2);
+    ctx.arc(contentStart + 10, y, 6, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
     ctx.fill();
 
-    // Value and label
-    ctx.fillStyle = colors.text;
-    ctx.font = "bold 14px Inter, system-ui, sans-serif";
-    ctx.fillText(stat.value.toString(), statsX + 18, statsY + 12);
-    ctx.fillStyle = colors.textMuted;
-    ctx.font = "12px Inter, system-ui, sans-serif";
-    ctx.fillText(stat.label, statsX + 35, statsY + 12);
+    // Label
+    ctx.fillStyle = colors.textSecondary;
+    ctx.font =
+      "500 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillText(label, contentStart + 35, y + 8);
 
-    statsX += 100;
-  });
+    // Count (Right aligned relative to a column)
+    ctx.fillStyle = colors.textPrimary;
+    ctx.font =
+      "bold 24px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillText(count.toString(), contentStart + 240, y + 8);
+  };
 
-  // Categories
-  const categories = result.score.categories.slice(0, 6);
-  const catY = 250;
-  const catWidth =
-    (width - 40 - 48 - 48 - (categories.length - 1) * 8) / categories.length;
+  drawMetricRow(
+    metricsY - rowHeight,
+    "Passed",
+    result.score.passCount,
+    colors.success,
+  );
+  drawMetricRow(
+    metricsY,
+    "Warnings",
+    result.score.warningCount,
+    colors.warning,
+  );
+  drawMetricRow(
+    metricsY + rowHeight,
+    "Errors",
+    result.score.failCount,
+    colors.error,
+  );
 
-  categories.forEach((cat, index) => {
-    const catX = 48 + index * (catWidth + 8);
-    const percentage = Math.round((cat.points / cat.maxPoints) * 100);
-
-    // Category background
-    ctx.fillStyle = colors.bg;
-    roundRect(ctx, catX, catY, catWidth, 70, 8);
-    ctx.fill();
-
-    // Category name
-    ctx.fillStyle = colors.textDim;
-    ctx.font = "10px Inter, system-ui, sans-serif";
-    const catName = cat.name.length > 8 ? cat.name.slice(0, 7) + "…" : cat.name;
-    ctx.fillText(catName, catX + 8, catY + 20);
-
-    // Category score
-    ctx.fillStyle = colors.text;
-    ctx.font = "bold 14px Inter, system-ui, sans-serif";
-    ctx.fillText(`${cat.points}/${cat.maxPoints}`, catX + 8, catY + 42);
-
-    // Progress bar background
-    ctx.fillStyle = colors.border;
-    roundRect(ctx, catX + 8, catY + 52, catWidth - 16, 4, 2);
-    ctx.fill();
-
-    // Progress bar fill
-    const barColor =
-      percentage >= 80
-        ? colors.emerald
-        : percentage >= 60
-          ? colors.yellow
-          : colors.red;
-    ctx.fillStyle = barColor;
-    roundRect(
-      ctx,
-      catX + 8,
-      catY + 52,
-      (catWidth - 16) * (percentage / 100),
-      4,
-      2,
-    );
-    ctx.fill();
-  });
-
-  // Footer
-  ctx.fillStyle = colors.textDim;
-  ctx.font = "11px Inter, system-ui, sans-serif";
-  const footerText = `metaview.dev • ${new Date(result.analyzedAt).toLocaleDateString()}`;
-  const footerWidth = ctx.measureText(footerText).width;
-  ctx.fillText(footerText, (width - footerWidth) / 2, height - 45);
-
-  // Convert to data URL
   return canvas.toDataURL("image/png", 1.0);
 }
 
 /**
- * Helper to draw rounded rectangles
+ * Utility to draw rounded rectangles
  */
 function roundRect(
   ctx: CanvasRenderingContext2D,
@@ -198,16 +237,14 @@ function roundRect(
   w: number,
   h: number,
   r: number,
-): void {
+) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
   ctx.beginPath();
   ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
 }
