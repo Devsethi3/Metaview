@@ -40,10 +40,12 @@ export function RawTab({ result }: RawTabProps) {
   const [view, setView] = useState<"table" | "json" | "html">("table");
   const [copiedJson, setCopiedJson] = useState(false);
   const [copiedHtml, setCopiedHtml] = useState(false);
-  const { setTheme, resolvedTheme, theme } = useTheme();
+  const { resolvedTheme } = useTheme();
 
   // Avoid hydration mismatch
   if (!resolvedTheme) return null;
+
+  const codeTheme = resolvedTheme === "dark" ? "github-dark" : undefined;
 
   const jsonOutput = generateExportJSON(result);
 
@@ -246,11 +248,11 @@ export function RawTab({ result }: RawTabProps) {
               <CardTitle className="text-base">JSON Export</CardTitle>
             </CardHeader>
             <CardContent>
-gi              <CodeBlock className="max-h-[500px] overflow-auto">
+              <CodeBlock className="max-h-[500px] overflow-auto">
                 <CodeBlockCode
                   code={jsonOutput}
                   language="json"
-                  // theme="github-dark"
+                  theme={codeTheme}
                 />
               </CodeBlock>
             </CardContent>
@@ -266,8 +268,8 @@ gi              <CodeBlock className="max-h-[500px] overflow-auto">
               <CodeBlock className="max-h-[500px] overflow-auto">
                 <CodeBlockCode
                   code={result.rawHead}
-                  language="html"
-                  theme="github-dark"
+                  language="json"
+                  theme={codeTheme}
                 />
               </CodeBlock>
             </CardContent>
