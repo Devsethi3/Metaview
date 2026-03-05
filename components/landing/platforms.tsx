@@ -28,7 +28,7 @@ const platforms = [
 
 export function LandingPlatforms() {
   return (
-    <section className="py-12 border-y bg-muted/30">
+    <section className="py-12 border-y">
       <div className="container mx-auto px-4">
         <p className="text-center text-sm text-muted-foreground mb-6">
           See your link previews across 9+ platforms

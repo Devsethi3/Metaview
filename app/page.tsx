@@ -44,7 +44,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <Header />
       <main className="flex-1">
         <LandingHero />
-        <LandingPlatforms />
+        {/* <LandingPlatforms /> */}
         <Suspense fallback={null}>
           <RecentChecks />
         </Suspense>
