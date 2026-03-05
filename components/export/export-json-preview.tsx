@@ -1,0 +1,59 @@
+// components/export/export-json-preview.tsx
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { CodeBlock, CodeBlockCode } from "@/components/ui/code-block";
+import { Copy, Check } from "lucide-react";
+import { toast } from "sonner";
+import type { AnalysisResult } from "@/types";
+import { generateExportJSON } from "@/lib/export-utils";
+
+interface ExportJsonPreviewProps {
+  result: AnalysisResult;
+}
+
+export function ExportJsonPreview({ result }: ExportJsonPreviewProps) {
+  const [copied, setCopied] = useState(false);
+  const jsonContent = generateExportJSON(result);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(jsonContent);
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">JSON Preview</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCopy}
+          className="h-7 text-xs"
+        >
+          {copied ? (
+            <>
+              <Check className="h-3 w-3 mr-1" />
+              Copied
+            </>
+          ) : (
+            <>
+              <Copy className="h-3 w-3 mr-1" />
+              Copy
+            </>
+          )}
+        </Button>
+      </div>
+      <CodeBlock className="max-h-[300px] overflow-auto">
+        <CodeBlockCode code={jsonContent} language="json" theme="github-dark" />
+      </CodeBlock>
+    </div>
+  );
+}

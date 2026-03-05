@@ -22,8 +22,6 @@ import {
   RefreshCw,
   Download,
   ArrowLeft,
-  FileJson,
-  FileImage,
   Link2,
   Twitter,
   Loader2,
@@ -37,6 +35,7 @@ import { extractDomain } from "@/lib/utils";
 import { encodeUrlParam } from "@/lib/url-helpers";
 import type { AnalysisResult } from "@/types";
 import { toast } from "sonner";
+import { ExportModal } from "@/components/export/export-modal";
 import ThemeToggle from "../ui/theme-toggle";
 
 interface ResultsHeaderProps {
@@ -50,8 +49,11 @@ export function ResultsHeader({
   onReanalyze,
   cacheInfo,
 }: ResultsHeaderProps) {
-  const [isExporting, setIsExporting] = useState(false);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportInitialTab, setExportInitialTab] = useState<"png" | "json">(
+    "png",
+  );
 
   const domain = extractDomain(result.url);
 
@@ -98,51 +100,9 @@ export function ResultsHeader({
     );
   };
 
-  const handleExportJSON = () => {
-    try {
-      const dataStr = JSON.stringify(result, null, 2);
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `metaview-${domain}-${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("JSON exported");
-    } catch {
-      toast.error("Failed to export JSON");
-    }
-  };
-
-  const handleExportPNG = async () => {
-    setIsExporting(true);
-    try {
-      const { toPng } = await import("html-to-image");
-      const element = document.getElementById("score-export-card");
-      if (!element) {
-        toast.error("Export element not found");
-        return;
-      }
-      const dataUrl = await toPng(element, {
-        quality: 1,
-        pixelRatio: 2,
-        backgroundColor: "#09090b",
-      });
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = `metaview-${domain}-score.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      toast.success("Score card exported");
-    } catch (error) {
-      console.error("Export error:", error);
-      toast.error("Failed to export PNG");
-    } finally {
-      setIsExporting(false);
-    }
+  const openExportModal = (tab: "png" | "json") => {
+    setExportInitialTab(tab);
+    setExportModalOpen(true);
   };
 
   return (
@@ -201,7 +161,7 @@ export function ResultsHeader({
                   </Tooltip>
                 </TooltipProvider>
 
-                {/* Copy URL Button (visible on larger screens) */}
+                {/* Copy URL Button */}
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -282,49 +242,25 @@ export function ResultsHeader({
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {/* Export Dropdown */}
-                <DropdownMenu>
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8"
-                            disabled={isExporting}
-                          >
-                            {isExporting ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Download className="h-3.5 w-3.5" />
-                            )}
-                            <span className="ml-2 hidden lg:inline">
-                              Export
-                            </span>
-                            <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        Export options
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      onClick={handleExportPNG}
-                      disabled={isExporting}
-                    >
-                      <FileImage className="h-4 w-4 mr-2" />
-                      Export as PNG
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleExportJSON}>
-                      <FileJson className="h-4 w-4 mr-2" />
-                      Export as JSON
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Export Button */}
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8"
+                        onClick={() => openExportModal("png")}
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        <span className="ml-2 hidden lg:inline">Export</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      Export analysis
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
 
               {/* Mobile Actions Menu */}
@@ -361,20 +297,13 @@ export function ResultsHeader({
                     Share on X
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleExportPNG}
-                    disabled={isExporting}
-                  >
-                    <FileImage className="h-4 w-4 mr-2" />
-                    Export as PNG
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportJSON}>
-                    <FileJson className="h-4 w-4 mr-2" />
-                    Export as JSON
+                  <DropdownMenuItem onClick={() => openExportModal("png")}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export analysis
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
+
               <ThemeToggle />
 
               {/* New Analysis Button */}
@@ -389,86 +318,13 @@ export function ResultsHeader({
         </div>
       </header>
 
-      {/* Hidden Export Card */}
-      <ExportCard result={result} />
+      {/* Export Modal */}
+      <ExportModal
+        open={exportModalOpen}
+        onOpenChange={setExportModalOpen}
+        result={result}
+        initialTab={exportInitialTab}
+      />
     </>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Export Card (Hidden, used for PNG generation)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ExportCard({ result }: { result: AnalysisResult }) {
-  const getGradeBgClass = (grade: string): string => {
-    if (grade.startsWith("A")) return "bg-emerald-500";
-    if (grade.startsWith("B")) return "bg-yellow-500";
-    if (grade === "C") return "bg-orange-500";
-    return "bg-red-500";
-  };
-
-  return (
-    <div
-      id="score-export-card"
-      className="fixed -left-[9999px] -top-[9999px] w-[600px] p-8 bg-[#09090b] text-white rounded-xl"
-      style={{ fontFamily: "Inter, system-ui, sans-serif" }}
-      aria-hidden="true"
-    >
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center">
-          <span className="text-sm font-bold">M</span>
-        </div>
-        <span className="text-lg font-semibold">Metaview</span>
-      </div>
-
-      {/* Score Section */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <div className="text-gray-400 text-sm mb-1">
-            {extractDomain(result.url)}
-          </div>
-          <div className="flex items-baseline gap-3">
-            <span className="text-5xl font-bold">{result.score.total}</span>
-            <span
-              className={`text-2xl font-semibold px-3 py-1 rounded ${getGradeBgClass(result.score.grade)}`}
-            >
-              {result.score.grade}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-emerald-500" />
-            <span>{result.score.passCount} passed</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <span>{result.score.warningCount} warnings</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span>{result.score.failCount} failed</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div className="grid grid-cols-6 gap-3 mb-6">
-        {result.score.categories.slice(0, 6).map((cat) => (
-          <div key={cat.key} className="bg-white/5 rounded-lg p-3 text-center">
-            <div className="text-xs text-gray-400 mb-1">{cat.name}</div>
-            <div className="text-lg font-semibold">
-              {cat.points}/{cat.maxPoints}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="text-center text-gray-500 text-sm">
-        metaview.dev • {new Date(result.analyzedAt).toLocaleDateString()}
-      </div>
-    </div>
   );
 }

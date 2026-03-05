@@ -14,15 +14,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { CodeBlock, CodeBlockCode } from "@/components/ui/code-block";
 import {
   Copy,
   Download,
   Table as TableIcon,
   Code,
   FileJson,
+  Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
-import { goeyToast } from "goey-toast";
+import {
+  generateExportJSON,
+  downloadFile,
+  generateFilename,
+} from "@/lib/export-utils";
+import { useTheme } from "next-themes";
 
 interface RawTabProps {
   result: AnalysisResult;
@@ -30,31 +38,53 @@ interface RawTabProps {
 
 export function RawTab({ result }: RawTabProps) {
   const [view, setView] = useState<"table" | "json" | "html">("table");
+  const [copiedJson, setCopiedJson] = useState(false);
+  const [copiedHtml, setCopiedHtml] = useState(false);
+  const { setTheme, resolvedTheme, theme } = useTheme();
 
-  const copyToClipboard = async (text: string, label: string) => {
+  // Avoid hydration mismatch
+  if (!resolvedTheme) return null;
+
+  const jsonOutput = generateExportJSON(result);
+
+  const handleCopyJson = async () => {
     try {
-      await navigator.clipboard.writeText(text);
-      goeyToast.success(`${label} copied to clipboard`);
+      await navigator.clipboard.writeText(jsonOutput);
+      setCopiedJson(true);
+      toast.success("JSON copied to clipboard");
+      setTimeout(() => setCopiedJson(false), 2000);
     } catch {
-      goeyToast.error("Failed to copy");
+      toast.error("Failed to copy");
     }
   };
 
-  const downloadFile = (content: string, filename: string, type: string) => {
-    const blob = new Blob([content], { type });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    goeyToast.success(`Downloaded ${filename}`);
+  const handleCopyHtml = async () => {
+    try {
+      await navigator.clipboard.writeText(result.rawHead);
+      setCopiedHtml(true);
+      toast.success("HTML copied to clipboard");
+      setTimeout(() => setCopiedHtml(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
   };
 
-  // Convert raw tags to CSV
-  const generateCSV = () => {
+  const handleDownloadJson = () => {
+    downloadFile(
+      jsonOutput,
+      generateFilename(result.url, "json"),
+      "application/json",
+    );
+    toast.success("JSON downloaded");
+  };
+
+  const handleDownloadHtml = () => {
+    const filename = `metaview-${result.url.replace(/[^a-zA-Z0-9]/g, "-")}-head.html`;
+    downloadFile(result.rawHead, filename, "text/html");
+    toast.success("HTML downloaded");
+  };
+
+  const handleDownloadCsv = () => {
     const headers = ["#", "Type", "Name", "Value"];
     const rows = result.rawTags.map((tag, i) => [
       i + 1,
@@ -62,47 +92,13 @@ export function RawTab({ result }: RawTabProps) {
       tag.name,
       `"${(tag.value || "").replace(/"/g, '""')}"`,
     ]);
-    return [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-  };
-
-  // Generate JSON output
-  const generateJSON = () => {
-    return JSON.stringify(
-      {
-        url: result.url,
-        analyzedAt: result.analyzedAt,
-        basic: result.basic,
-        openGraph: result.openGraph,
-        twitter: result.twitter,
-        images: {
-          ogImage: result.images.ogImage
-            ? {
-                url: result.images.ogImage.url,
-                width: result.images.ogImage.width,
-                height: result.images.ogImage.height,
-                fileSize: result.images.ogImage.fileSize,
-                format: result.images.ogImage.format,
-              }
-            : null,
-        },
-        site: {
-          https: result.site.https,
-          httpStatus: result.site.httpStatus,
-          loadTime: result.site.loadTime,
-          robotsTxt: result.site.robotsTxt.exists,
-          sitemapXml: result.site.sitemapXml.exists,
-        },
-        score: {
-          total: result.score.total,
-          grade: result.score.grade,
-          passCount: result.score.passCount,
-          warningCount: result.score.warningCount,
-          failCount: result.score.failCount,
-        },
-      },
-      null,
-      2,
-    );
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((r) => r.join(",")),
+    ].join("\n");
+    const filename = `metaview-${result.url.replace(/[^a-zA-Z0-9]/g, "-")}-tags.csv`;
+    downloadFile(csvContent, filename, "text/csv");
+    toast.success("CSV downloaded");
   };
 
   const getTypeBadgeVariant = (
@@ -118,96 +114,73 @@ export function RawTab({ result }: RawTabProps) {
     }
   };
 
-  const jsonOutput = generateJSON();
-  const csvOutput = generateCSV();
-
   return (
     <div className="space-y-6">
       <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
-        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <TabsList>
             <TabsTrigger value="table" className="gap-2">
               <TableIcon className="h-4 w-4" />
-              Table
+              <span className="hidden sm:inline">Table</span>
             </TabsTrigger>
             <TabsTrigger value="json" className="gap-2">
               <FileJson className="h-4 w-4" />
-              JSON
+              <span className="hidden sm:inline">JSON</span>
             </TabsTrigger>
             <TabsTrigger value="html" className="gap-2">
               <Code className="h-4 w-4" />
-              HTML Head
+              <span className="hidden sm:inline">HTML Head</span>
             </TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-2">
             {view === "table" && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(csvOutput, "CSV")}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy CSV
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    downloadFile(csvOutput, "meta-tags.csv", "text/csv")
-                  }
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download CSV
-                </Button>
-              </>
+              <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
+                <Download className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Download CSV</span>
+              </Button>
             )}
             {view === "json" && (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(jsonOutput, "JSON")}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy
+                <Button variant="outline" size="sm" onClick={handleCopyJson}>
+                  {copiedJson ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {copiedJson ? "Copied" : "Copy"}
+                  </span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    downloadFile(
-                      jsonOutput,
-                      "metadata.json",
-                      "application/json",
-                    )
-                  }
+                  onClick={handleDownloadJson}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download
+                  <span className="hidden sm:inline">Download</span>
                 </Button>
               </>
             )}
             {view === "html" && (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(result.rawHead, "HTML")}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy
+                <Button variant="outline" size="sm" onClick={handleCopyHtml}>
+                  {copiedHtml ? (
+                    <Check className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {copiedHtml ? "Copied" : "Copy"}
+                  </span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    downloadFile(result.rawHead, "head.html", "text/html")
-                  }
+                  onClick={handleDownloadHtml}
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download
+                  <span className="hidden sm:inline">Download</span>
                 </Button>
               </>
             )}
@@ -217,44 +190,51 @@ export function RawTab({ result }: RawTabProps) {
         <TabsContent value="table" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>All Meta Tags ({result.rawTags.length})</CardTitle>
+              <CardTitle className="text-base">
+                All Meta Tags ({result.rawTags.length})
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="rounded-lg border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      <TableHead className="w-24">Type</TableHead>
-                      <TableHead className="w-48">Name</TableHead>
-                      <TableHead>Value</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {result.rawTags.map((tag, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="text-muted-foreground">
-                          {i + 1}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getTypeBadgeVariant(tag.type)}>
-                            {tag.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {tag.name}
-                        </TableCell>
-                        <TableCell className="max-w-md">
-                          <span className="text-sm break-all line-clamp-2">
-                            {tag.value || (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </span>
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-12">#</TableHead>
+                        <TableHead className="w-24">Type</TableHead>
+                        <TableHead className="w-48">Name</TableHead>
+                        <TableHead>Value</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {result.rawTags.map((tag, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-muted-foreground font-mono text-xs">
+                            {i + 1}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={getTypeBadgeVariant(tag.type)}
+                              className="text-xs"
+                            >
+                              {tag.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {tag.name}
+                          </TableCell>
+                          <TableCell className="max-w-md">
+                            <span className="text-sm break-all line-clamp-2">
+                              {tag.value || (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -263,12 +243,16 @@ export function RawTab({ result }: RawTabProps) {
         <TabsContent value="json" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>JSON Export</CardTitle>
+              <CardTitle className="text-base">JSON Export</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="p-4 bg-muted rounded-lg text-xs overflow-x-auto max-h-[600px] overflow-y-auto">
-                <code>{jsonOutput}</code>
-              </pre>
+gi              <CodeBlock className="max-h-[500px] overflow-auto">
+                <CodeBlockCode
+                  code={jsonOutput}
+                  language="json"
+                  // theme="github-dark"
+                />
+              </CodeBlock>
             </CardContent>
           </Card>
         </TabsContent>
@@ -276,12 +260,16 @@ export function RawTab({ result }: RawTabProps) {
         <TabsContent value="html" className="mt-0">
           <Card>
             <CardHeader>
-              <CardTitle>Raw HTML &lt;head&gt;</CardTitle>
+              <CardTitle className="text-base">Raw HTML &lt;head&gt;</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="p-4 bg-muted rounded-lg text-xs overflow-x-auto max-h-[600px] overflow-y-auto whitespace-pre-wrap">
-                <code>{result.rawHead}</code>
-              </pre>
+              <CodeBlock className="max-h-[500px] overflow-auto">
+                <CodeBlockCode
+                  code={result.rawHead}
+                  language="html"
+                  theme="github-dark"
+                />
+              </CodeBlock>
             </CardContent>
           </Card>
         </TabsContent>

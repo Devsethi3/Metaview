@@ -53,7 +53,7 @@ export function ScoreSummary({ result }: ScoreSummaryProps) {
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden bg-sidebar">
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
           {/* Score Circle */}
