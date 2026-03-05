@@ -1,13 +1,14 @@
 // components/export/export-json-preview.tsx
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeBlock, CodeBlockCode } from "@/components/ui/code-block";
 import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
 import { generateExportJSON } from "@/lib/export-utils";
+import { useTheme } from "next-themes";
 
 interface ExportJsonPreviewProps {
   result: AnalysisResult;
@@ -16,6 +17,11 @@ interface ExportJsonPreviewProps {
 export function ExportJsonPreview({ result }: ExportJsonPreviewProps) {
   const [copied, setCopied] = useState(false);
   const jsonContent = generateExportJSON(result);
+  const { resolvedTheme } = useTheme();
+
+  // Memoize expensive computations
+  //   const jsonOutput = useMemo(() => generateExportJSON(result), [result]);
+  const codeTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
 
   const handleCopy = async () => {
     try {
@@ -52,7 +58,7 @@ export function ExportJsonPreview({ result }: ExportJsonPreviewProps) {
         </Button>
       </div>
       <CodeBlock className="max-h-[300px] overflow-auto">
-        <CodeBlockCode code={jsonContent} language="json" theme="github-dark" />
+        <CodeBlockCode code={jsonContent} language="json" theme={codeTheme} />
       </CodeBlock>
     </div>
   );
