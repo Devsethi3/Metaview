@@ -1,4 +1,3 @@
-// components/export/export-modal.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,7 +26,6 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
 import { ExportPngPreview } from "./export-png-preview";
 import { ExportJsonPreview } from "./export-json-preview";
@@ -37,6 +35,7 @@ import {
   downloadFile,
   generateFilename,
 } from "@/lib/export-utils";
+import { goeyToast } from "goey-toast";
 
 interface ExportModalProps {
   open: boolean;
@@ -79,7 +78,7 @@ export function ExportModal({
       setPngDataUrl(dataUrl);
     } catch (error) {
       console.error("Failed to generate PNG:", error);
-      toast.error("Failed to generate image");
+      goeyToast.error("Failed to generate image");
     } finally {
       setIsGenerating(false);
     }
@@ -94,11 +93,11 @@ export function ExportModal({
       const response = await fetch(pngDataUrl);
       const blob = await response.blob();
       downloadFile(blob, generateFilename(result.url, "png"), "image/png");
-      toast.success("Image downloaded");
+      goeyToast.success("Image downloaded");
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to download PNG:", error);
-      toast.error("Failed to download image");
+      goeyToast.error("Failed to download image");
     } finally {
       setIsDownloading(false);
     }
@@ -112,11 +111,11 @@ export function ExportModal({
         generateFilename(result.url, "json"),
         "application/json",
       );
-      toast.success("JSON downloaded");
+      goeyToast.success("JSON downloaded");
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to download JSON:", error);
-      toast.error("Failed to download JSON");
+      goeyToast.error("Failed to download JSON");
     }
   };
 

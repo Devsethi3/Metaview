@@ -19,8 +19,8 @@ import { getRelativeTime, extractDomain } from "@/lib/utils";
 import { encodeUrlParam } from "@/lib/url-helpers";
 import { getCachedResult } from "@/lib/cache";
 import Link from "next/link";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { goeyToast } from "goey-toast";
 
 export function RecentChecks() {
   const [mounted, setMounted] = useState(false);
@@ -38,7 +38,7 @@ export function RecentChecks() {
 
   const handleClearAll = () => {
     clearHistory();
-    toast.success("History cleared");
+    goeyToast.success("History cleared");
   };
 
   const getGradeColor = (grade: string) => {
@@ -152,7 +152,7 @@ export function RecentChecks() {
                           onClick={(e) => {
                             e.preventDefault();
                             removeFromHistory(item.id);
-                            toast.success("Removed from history");
+                            goeyToast.success("Removed from history");
                           }}
                         >
                           <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />

@@ -24,7 +24,6 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
 import {
   generateExportJSON,
@@ -33,6 +32,7 @@ import {
 } from "@/lib/export-utils";
 import { useTheme } from "next-themes";
 import { CodeBlock, CodeBlockCode } from "@/components/ui/code-block";
+import { goeyToast } from "goey-toast";
 
 interface RawTabProps {
   result: AnalysisResult;
@@ -199,10 +199,10 @@ export function RawTab({ result }: RawTabProps) {
     try {
       await navigator.clipboard.writeText(jsonOutput);
       setCopiedJson(true);
-      toast.success("JSON copied to clipboard");
+      goeyToast.success("JSON copied to clipboard");
       setTimeout(() => setCopiedJson(false), 2000);
     } catch {
-      toast.error("Failed to copy");
+      goeyToast.error("Failed to copy");
     }
   }, [jsonOutput]);
 
@@ -210,10 +210,10 @@ export function RawTab({ result }: RawTabProps) {
     try {
       await navigator.clipboard.writeText(result.rawHead);
       setCopiedHtml(true);
-      toast.success("HTML copied to clipboard");
+      goeyToast.success("HTML copied to clipboard");
       setTimeout(() => setCopiedHtml(false), 2000);
     } catch {
-      toast.error("Failed to copy");
+      goeyToast.error("Failed to copy");
     }
   }, [result.rawHead]);
 
@@ -223,13 +223,13 @@ export function RawTab({ result }: RawTabProps) {
       generateFilename(result.url, "json"),
       "application/json",
     );
-    toast.success("JSON downloaded");
+    goeyToast.success("JSON downloaded");
   }, [jsonOutput, result.url]);
 
   const handleDownloadHtml = useCallback(() => {
     const filename = `metaview-${result.url.replace(/[^a-zA-Z0-9]/g, "-")}-head.html`;
     downloadFile(result.rawHead, filename, "text/html");
-    toast.success("HTML downloaded");
+    goeyToast.success("HTML downloaded");
   }, [result.rawHead, result.url]);
 
   const handleDownloadCsv = useCallback(() => {
@@ -246,7 +246,7 @@ export function RawTab({ result }: RawTabProps) {
     ].join("\n");
     const filename = `metaview-${result.url.replace(/[^a-zA-Z0-9]/g, "-")}-tags.csv`;
     downloadFile(csvContent, filename, "text/csv");
-    toast.success("CSV downloaded");
+    goeyToast.success("CSV downloaded");
   }, [result.rawTags, result.url]);
 
   // Handle hydration

@@ -1,14 +1,13 @@
-// components/export/export-json-preview.tsx
 "use client";
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeBlock, CodeBlockCode } from "@/components/ui/code-block";
 import { Copy, Check } from "lucide-react";
-import { toast } from "sonner";
 import type { AnalysisResult } from "@/types";
 import { generateExportJSON } from "@/lib/export-utils";
 import { useTheme } from "next-themes";
+import { goeyToast } from "goey-toast";
 
 interface ExportJsonPreviewProps {
   result: AnalysisResult;
@@ -27,10 +26,10 @@ export function ExportJsonPreview({ result }: ExportJsonPreviewProps) {
     try {
       await navigator.clipboard.writeText(jsonContent);
       setCopied(true);
-      toast.success("Copied to clipboard");
+      goeyToast.success("Copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy");
+      goeyToast.error("Failed to copy");
     }
   };
 

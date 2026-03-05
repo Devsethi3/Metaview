@@ -33,9 +33,9 @@ import {
 import { extractDomain } from "@/lib/utils";
 import { encodeUrlParam } from "@/lib/url-helpers";
 import type { AnalysisResult } from "@/types";
-import { toast } from "sonner";
 import { ExportModal } from "@/components/export/export-modal";
 import ThemeToggle from "../ui/theme-toggle";
+import { goeyToast } from "goey-toast";
 
 interface ResultsHeaderProps {
   result: AnalysisResult;
@@ -62,9 +62,9 @@ export function ResultsHeader({
     setIsReanalyzing(true);
     try {
       await onReanalyze();
-      toast.success("Analysis complete");
+      goeyToast.success("Analysis complete");
     } catch {
-      toast.error("Failed to re-analyze");
+      goeyToast.error("Failed to re-analyze");
     } finally {
       setIsReanalyzing(false);
     }
@@ -74,18 +74,18 @@ export function ResultsHeader({
     try {
       const shareableUrl = `${window.location.origin}/?url=${encodeUrlParam(result.url)}`;
       await navigator.clipboard.writeText(shareableUrl);
-      toast.success("Link copied to clipboard");
+      goeyToast.success("Link copied to clipboard");
     } catch {
-      toast.error("Failed to copy link");
+      goeyToast.error("Failed to copy link");
     }
   };
 
   const handleCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(result.url);
-      toast.success("URL copied to clipboard");
+      goeyToast.success("URL copied to clipboard");
     } catch {
-      toast.error("Failed to copy URL");
+      goeyToast.error("Failed to copy URL");
     }
   };
 
