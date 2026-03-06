@@ -90,8 +90,8 @@ export function ResultsHeader({
   };
 
   const handleShareTwitter = () => {
-    const shareableUrl = `${window.location.origin}/?url=${encodeUrlParam(result.url)}`;
-    const text = `🚀 Check out my site's link preview analysis on Metaview!\n\n${shareableUrl}`;
+    const shareableUrl = `${window.location.origin}/?url=${encodeUrlParam(result.url)}`;  
+    const text = `Check out my site's link preview analysis on Metaview!\n\n${shareableUrl}`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
       "_blank",

@@ -41,10 +41,10 @@ export function LandingFooter() {
                     href="https://github.com/Devsethi3/Metaview"
                     label="GitHub"
                   >
-                    <GithubIcon className="size-5" />
+                    <GithubIcon className="size-4" />
                   </SocialLink>
                   <SocialLink href="https://x.com/imsethidev" label="Twitter">
-                    <TwitterIcon className="size-5" />
+                    <TwitterIcon className="size-4" />
                   </SocialLink>
                 </div>
               </div>
@@ -81,7 +81,7 @@ function SocialLink({
       rel="noopener noreferrer"
       className={cn(
         buttonVariants({
-          variant: "ghost",
+          variant: "outline",
           size: "icon",
         }),
       )}
