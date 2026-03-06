@@ -1,8 +1,6 @@
 import { Suspense } from "react";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingFeatures } from "@/components/landing/features";
-import { LandingPlatforms } from "@/components/landing/platforms";
-import { LandingDemo } from "@/components/landing/demo";
 import { LandingFAQ } from "@/components/landing/faq";
 import { LandingFooter } from "@/components/landing/footer";
 import { RecentChecks } from "@/components/landing/recent-checks";
@@ -15,20 +13,14 @@ interface PageProps {
 }
 
 export default async function HomePage({ searchParams }: PageProps) {
-  // Await the searchParams in Next.js 15
   const params = await searchParams;
   const urlParam = params.url;
 
-  // Decode the URL param back to full URL
-  // Input: "github.com" or "github.com/vercel/next.js"
-  // Output: "https://github.com" or "https://github.com/vercel/next.js"
   const urlToAnalyze = urlParam ? decodeUrlParam(urlParam) : null;
 
-  // If URL is provided, show results page
   if (urlToAnalyze) {
     return (
       <div className="min-h-screen flex flex-col">
-        {/* <Header /> */}
         <main className="flex-1">
           <Suspense fallback={<ResultsLoadingSkeleton />}>
             <ResultsWrapper url={urlToAnalyze} />
@@ -38,18 +30,15 @@ export default async function HomePage({ searchParams }: PageProps) {
     );
   }
 
-  // Otherwise show landing page
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
         <LandingHero />
-        {/* <LandingPlatforms /> */}
         <Suspense fallback={null}>
           <RecentChecks />
         </Suspense>
         <LandingFeatures />
-        <LandingDemo />
         <LandingFAQ />
       </main>
       <LandingFooter />

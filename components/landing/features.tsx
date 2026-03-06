@@ -21,12 +21,12 @@ type FeatureType = {
 
 export function LandingFeatures() {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-8">
+    <div className="mx-auto w-full mt-16 max-w-5xl space-y-8">
       <div className="text-center mb-12">
         {/* <h2 className="text-3xl md:text-4xl font-bold mb-4">
           Everything you need to perfect your link previews
         </h2> */}
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto px-3">
           Metaview goes beyond basic meta tag checking. Get detailed analysis,
           actionable fixes, and beautiful previews.
         </p>

@@ -1,58 +1,93 @@
-// components/landing/footer.tsx
+import { cn } from "@/lib/utils";
+import { GithubIcon, TwitterIcon } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Github, Twitter, Heart, Zap } from "lucide-react";
+import Logo from "../shared/logo";
+import { buttonVariants } from "../ui/button";
 
 export function LandingFooter() {
   return (
-    <footer className="border-t py-8 mt-auto">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded bg-primary flex items-center justify-center">
-              <Zap className="h-3 w-3 text-primary-foreground" />
+    <footer className="relative z-10 bg-background w-full overflow-hidden">
+      <div className="h-px bg-linear-to-r from-transparent via-primary/50 to-transparent" />
+
+      <div className="bg-background/40 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 md:py-12">
+            <div className="space-y-4 max-w-xs">
+              <Link href="/" className="flex items-center gap-2.5 group w-fit">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full group-hover:bg-primary/30 transition-colors" />
+                  <Logo className="relative size-8 text-primary" />
+                </div>
+                <h2 className="instrument-serif text-2xl text-foreground">
+                  Metaview
+                </h2>
+              </Link>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                See what matters in your website,
+                <br />
+                with clear, actionable insights.
+              </p>
             </div>
-            <span className="font-semibold">Metaview</span>
+
+            {/* Navigation Columns Container */}
+            <div className="flex flex-wrap gap-10 sm:gap-16">
+              {/* Connect Column */}
+              <div className="space-y-4">
+                {/* <h3 className="text-sm font-medium text-foreground">
+                  Connect
+                </h3> */}
+                <div className="flex items-center gap-2">
+                  <SocialLink
+                    href="https://github.com/Devsethi3/Metaview"
+                    label="GitHub"
+                  >
+                    <GithubIcon className="size-5" />
+                  </SocialLink>
+                  <SocialLink href="https://x.com/imsethidev" label="Twitter">
+                    <TwitterIcon className="size-5" />
+                  </SocialLink>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <span>Made with</span>
-            <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" />
-            <span>by</span>
-            <a
-              href="https://twitter.com/yourusername"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground hover:underline underline-offset-4"
-            >
-              @yourusername
-            </a>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href="https://github.com/yourusername/metaview"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Github className="h-4 w-4 mr-2" />
-                Star on GitHub
-              </a>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href="https://twitter.com/intent/tweet?text=Check%20out%20Metaview%20-%20preview%20your%20link%20previews%20across%20every%20platform!%20https://metaview.dev"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Twitter className="h-4 w-4 mr-2" />
-                Share
-              </a>
-            </Button>
+          {/* Bottom Bar */}
+          <div className="border-t border-primary/10 py-6">
+            <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+              <p className="text-xs text-muted-foreground text-center sm:text-left">
+                © {new Date().getFullYear()} Metaview. All rights reserved.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </footer>
+  );
+}
+
+function SocialLink({
+  href,
+  children,
+  label,
+}: {
+  href: string;
+  children: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        buttonVariants({
+          variant: "ghost",
+          size: "icon",
+        }),
+      )}
+      aria-label={label}
+    >
+      {children}
+    </Link>
   );
 }

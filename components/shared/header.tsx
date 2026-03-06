@@ -28,7 +28,7 @@ export const Header = () => {
           className={cn(
             `
       mx-auto mt-2
-      w-full max-w-6xl
+      w-full max-w-5xl
       px-3 sm:px-4 lg:px-6
       bg-background/60
       backdrop-blur-lg
@@ -58,7 +58,7 @@ export const Header = () => {
 
               <Button asChild variant="outline">
                 <Link
-                  href="https://github.com/Devsethi3/repo-gist"
+                  href="https://github.com/Devsethi3/Metaview"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

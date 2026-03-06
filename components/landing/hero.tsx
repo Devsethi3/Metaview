@@ -69,9 +69,7 @@ export function LandingHero() {
     const value = e.target.value;
     setUrl(value);
 
-    // Clear error when user starts typing again
     if (error && value.trim()) {
-      // Only validate on change if it looks like a URL
       if (looksLikeUrl(value)) {
         const validation = validateUrl(value);
         if (validation.isValid) {
@@ -105,13 +103,12 @@ export function LandingHero() {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Background gradient */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/10 rounded-full blur-3xl opacity-50" />
       </div>
 
-      <div className="container mx-auto px-4 py-16 md:py-24 lg:py-32">
+      <div className="container mx-auto px-4 py-24 lg:py-32">
         <div className="max-w-3xl mx-auto text-center space-y-8">
           {/* Badge */}
           <div className="flex justify-center">
@@ -120,19 +117,15 @@ export function LandingHero() {
             </span>
           </div>
 
-          {/* Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl instrument-serif text-balance tracking-wide">
-            Ever wonder how your link looks on{" "}
-            <span className="text-primary">Twitter, Discord, or Slack?</span>
+            Your link previews are broken.{" "}
+            <span className="text-primary">Find out why in seconds</span>
           </h1>
 
-          {/* Subheadline */}
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto text-balance">
-            See how your links appear on X, LinkedIn, Discord, Slack, WhatsApp,
-            Telegram, Facebook, and Google Search all on one page.
-          </p>
+          {/* <p className="lg:text-lg text-base text-muted-foreground max-w-2xl mx-auto text-balance">
+            Instantly audit your meta tags, preview social cards across platforms, and ship links that actually get clicks
+          </p> */}
 
-          {/* URL Input Form */}
           <form
             onSubmit={handleSubmit}
             className="flex flex-col gap-2 max-w-xl mx-auto"
@@ -147,7 +140,7 @@ export function LandingHero() {
                   onBlur={handleInputBlur}
                   onKeyDown={handleKeyDown}
                   className={cn(
-                    "h-12 text-base pr-4 pl-4 transition-colors",
+                    "h-10 text-base pr-4 pl-4 transition-colors",
                     error &&
                       "border-destructive focus-visible:ring-destructive",
                   )}
@@ -159,7 +152,7 @@ export function LandingHero() {
               <Button
                 type="submit"
                 size="lg"
-                className="h-12 px-6"
+                className="h-10 px-6"
                 disabled={isLoading}
               >
                 {isLoading ? (

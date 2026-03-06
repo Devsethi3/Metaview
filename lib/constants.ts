@@ -158,8 +158,7 @@ export const OG_IMAGE_LIMITS = {
 };
 
 export const QUICK_TRY_URLS = [
-  "github.com",
-  "vercel.com",
+  "devsethi.site",
   "stripe.com",
   "linear.app",
 ];
