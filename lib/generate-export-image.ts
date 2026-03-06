@@ -170,7 +170,6 @@ export async function generateExportImage(
   ctx.font =
     "bold 36px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
   // Truncate domain if too long visually
-  const maxTextW = cardW - (contentStart - cardX) - 40;
   const displayDomain =
     domain.length > 25 ? domain.substring(0, 24) + "..." : domain;
   ctx.fillText(displayDomain, contentStart, cardY + 145);

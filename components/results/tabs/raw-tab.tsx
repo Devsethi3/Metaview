@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo, useRef } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +35,6 @@ interface RawTabProps {
   result: AnalysisResult;
 }
 
-
 const StatsCards = memo(function StatsCards({
   rawTags,
 }: {
@@ -62,7 +61,7 @@ const StatsCards = memo(function StatsCards({
       { label: "Twitter Tags", value: stats.twitter },
       { label: "Link Tags", value: stats.link },
     ],
-    [stats],
+    [stats]
   );
 
   return (
@@ -81,7 +80,6 @@ const StatsCards = memo(function StatsCards({
   );
 });
 
-
 const getBadgeVariant = (type: string): "default" | "secondary" | "outline" => {
   switch (type) {
     case "og":
@@ -92,7 +90,6 @@ const getBadgeVariant = (type: string): "default" | "secondary" | "outline" => {
       return "outline";
   }
 };
-
 
 const TagTableRow = memo(function TagTableRow({
   tag,
@@ -122,7 +119,6 @@ const TagTableRow = memo(function TagTableRow({
     </TableRow>
   );
 });
-
 
 const TableContent = memo(function TableContent({
   rawTags,
@@ -165,7 +161,6 @@ const TableContent = memo(function TableContent({
   );
 });
 
-
 const JsonView = memo(function JsonView({
   jsonOutput,
   codeTheme,
@@ -186,7 +181,6 @@ const JsonView = memo(function JsonView({
     </Card>
   );
 });
-
 
 const HtmlView = memo(function HtmlView({
   rawHead,
@@ -292,21 +286,30 @@ const ActionButtons = memo(function ActionButtons({
   return null;
 });
 
+type ViewType = "table" | "json" | "html";
 
 export function RawTab({ result }: RawTabProps) {
-  const [view, setView] = useState<"table" | "json" | "html">("table");
+  const [view, setView] = useState<ViewType>("table");
   const [copiedJson, setCopiedJson] = useState(false);
   const [copiedHtml, setCopiedHtml] = useState(false);
+  const [activatedViews, setActivatedViews] = useState<Record<ViewType, boolean>>({
+    table: true,
+    json: false,
+    html: false,
+  });
   const { resolvedTheme } = useTheme();
-
-  const activatedRef = useRef<Set<string>>(new Set(["table"]));
-  if (!activatedRef.current.has(view)) {
-    activatedRef.current.add(view);
-  }
-  const activated = activatedRef.current;
 
   const jsonOutput = useMemo(() => generateExportJSON(result), [result]);
   const codeTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
+
+  // Handle view change and track activated views
+  const handleViewChange = useCallback((newView: ViewType) => {
+    setView(newView);
+    setActivatedViews((prev) => {
+      if (prev[newView]) return prev;
+      return { ...prev, [newView]: true };
+    });
+  }, []);
 
   const handleCopyJson = useCallback(async () => {
     try {
@@ -334,7 +337,7 @@ export function RawTab({ result }: RawTabProps) {
     downloadFile(
       jsonOutput,
       generateFilename(result.url, "json"),
-      "application/json",
+      "application/json"
     );
     goeyToast.success("JSON downloaded");
   }, [jsonOutput, result.url]);
@@ -385,7 +388,7 @@ export function RawTab({ result }: RawTabProps) {
           ).map(({ value, icon: Icon, label }) => (
             <button
               key={value}
-              onClick={() => setView(value)}
+              onClick={() => handleViewChange(value)}
               className={`
                 inline-flex items-center justify-center gap-1.5 sm:gap-2
                 whitespace-nowrap rounded-md px-2.5 sm:px-3 py-1 sm:py-1.5
@@ -419,21 +422,21 @@ export function RawTab({ result }: RawTabProps) {
           />
         </div>
       </div>
-      
+
       <div className="relative">
-        {activated.has("table") && (
+        {activatedViews.table && (
           <div className={view === "table" ? "block" : "hidden"}>
             <TableContent rawTags={result.rawTags} />
           </div>
         )}
 
-        {activated.has("json") && (
+        {activatedViews.json && (
           <div className={view === "json" ? "block" : "hidden"}>
             <JsonView jsonOutput={jsonOutput} codeTheme={codeTheme} />
           </div>
         )}
 
-        {activated.has("html") && (
+        {activatedViews.html && (
           <div className={view === "html" ? "block" : "hidden"}>
             <HtmlView rawHead={result.rawHead} codeTheme={codeTheme} />
           </div>

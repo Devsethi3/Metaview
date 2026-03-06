@@ -1,13 +1,7 @@
 // components/results/tabs/basic-tab.tsx
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +14,6 @@ import {
   XCircle,
   AlertTriangle,
   ChevronDown,
-  ExternalLink,
   FileText,
   Globe,
   Shield,
@@ -36,66 +29,73 @@ interface BasicTabProps {
   result: AnalysisResult;
 }
 
+interface CharacterBarProps {
+  current: number;
+  min: number;
+  max: number;
+  ideal: number;
+}
+
+type Status = "pass" | "warning" | "fail";
+
+// Moved StatusIcon outside of BasicTab to fix lint errors
+function StatusIcon({ status }: { status: Status }) {
+  if (status === "pass") {
+    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+  }
+
+  if (status === "warning") {
+    return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+  }
+
+  return <XCircle className="h-4 w-4 text-red-500" />;
+}
+
+// Moved CharacterBar outside of BasicTab to fix lint errors
+function CharacterBar({ current, min, max, ideal }: CharacterBarProps) {
+  const percentage = Math.min((current / max) * 100, 100);
+  const isGood = current >= min && current <= max;
+  const isTooShort = current < min;
+  const isTooLong = current > max;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>{current} characters</span>
+        <span>
+          {isTooShort
+            ? `${min - current} too short`
+            : isTooLong
+              ? `${current - max} too long`
+              : "Good length"}
+        </span>
+      </div>
+
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className={`h-full transition-all ${
+            isGood
+              ? "bg-emerald-500"
+              : isTooShort
+                ? "bg-yellow-500"
+                : "bg-red-500"
+          }`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>{min}</span>
+        <span className="text-emerald-500">{ideal} ideal</span>
+        <span>{max}</span>
+      </div>
+    </div>
+  );
+}
+
 export function BasicTab({ result }: BasicTabProps) {
   const [robotsOpen, setRobotsOpen] = useState(false);
   const [sitemapOpen, setSitemapOpen] = useState(false);
-
-  const StatusIcon = ({ status }: { status: "pass" | "warning" | "fail" }) => {
-    if (status === "pass")
-      return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-    if (status === "warning")
-      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-    return <XCircle className="h-4 w-4 text-red-500" />;
-  };
-
-  const CharacterBar = ({
-    current,
-    min,
-    max,
-    ideal,
-  }: {
-    current: number;
-    min: number;
-    max: number;
-    ideal: number;
-  }) => {
-    const percentage = Math.min((current / max) * 100, 100);
-    const isGood = current >= min && current <= max;
-    const isTooShort = current < min;
-    const isTooLong = current > max;
-
-    return (
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{current} characters</span>
-          <span>
-            {isTooShort
-              ? `${min - current} too short`
-              : isTooLong
-                ? `${current - max} too long`
-                : "Good length"}
-          </span>
-        </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              isGood
-                ? "bg-emerald-500"
-                : isTooShort
-                  ? "bg-yellow-500"
-                  : "bg-red-500"
-            }`}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{min}</span>
-          <span className="text-emerald-500">{ideal} ideal</span>
-          <span>{max}</span>
-        </div>
-      </div>
-    );
-  };
 
   const basicMeta = [
     {

@@ -17,10 +17,8 @@ import {
   AlertTriangle,
   ChevronDown,
   Copy,
-  Filter,
 } from "lucide-react";
-import type { AnalysisResult, ScoreCheck, ScoreCategory } from "@/types";
-import { ScoreCircle } from "../score-circle";
+import type { AnalysisResult, ScoreCheck } from "@/types";
 import { GRADE_SCALE } from "@/lib/constants";
 import { goeyToast } from "goey-toast";
 
@@ -65,14 +63,6 @@ export function ScoreTab({ result }: ScoreTabProps) {
     return checks.filter(c => c.status === filter);
   };
 
-  const getGradeInfo = () => {
-    const gradeKey = score.grade as keyof typeof GRADE_SCALE;
-    return GRADE_SCALE[gradeKey] || GRADE_SCALE["F"];
-  };
-
-  const gradeInfo = getGradeInfo();
-
-  // Category icons
   const getCategoryIcon = (key: string) => {
     switch (key) {
       case "essential": return "📋";

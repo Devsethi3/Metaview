@@ -24,250 +24,249 @@ import {
   Clock,
   Accessibility,
 } from "lucide-react";
-import type { AnalysisResult, ImageAnalysis } from "@/types";
+import type { ImageAnalysis } from "@/types";
 import { PLATFORMS, OG_IMAGE_LIMITS } from "@/lib/constants";
 import { formatBytes, formatMs } from "@/lib/utils";
+import type { AnalysisResult } from "@/types";
 
 interface ImagesTabProps {
   result: AnalysisResult;
 }
 
-export function ImagesTab({ result }: ImagesTabProps) {
-  const { images } = result;
+type Status = "pass" | "warning" | "fail";
 
-  const StatusIcon = ({ status }: { status: "pass" | "warning" | "fail" }) => {
-    if (status === "pass")
-      return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-    if (status === "warning")
-      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-    return <XCircle className="h-4 w-4 text-red-500" />;
-  };
+// Moved StatusIcon outside of ImagesTab to fix lint errors
+function StatusIcon({ status }: { status: Status }) {
+  if (status === "pass") {
+    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+  }
+  if (status === "warning") {
+    return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+  }
+  return <XCircle className="h-4 w-4 text-red-500" />;
+}
 
-  const ImageCard = ({
-    title,
-    image,
-    type,
-  }: {
-    title: string;
-    image: ImageAnalysis | null;
-    type: "og" | "twitter" | "favicon" | "apple";
-  }) => {
-    if (!image && type !== "og") return null;
+interface ImageCardProps {
+  title: string;
+  image: ImageAnalysis | null;
+  type: "og" | "twitter" | "favicon" | "apple";
+}
 
-    const issues: string[] = [];
-    let overallStatus: "pass" | "warning" | "fail" = "pass";
+// Moved ImageCard outside of ImagesTab to fix lint errors
+function ImageCard({ title, image, type }: ImageCardProps) {
+  if (!image && type !== "og") return null;
 
-    if (!image) {
-      return (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ImageIcon className="h-5 w-5" />
-              {title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center h-32 bg-muted rounded-lg">
-              <div className="text-center text-muted-foreground">
-                <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No image specified</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      );
-    }
+  const issues: string[] = [];
+  let overallStatus: Status = "pass";
 
-    // Check for issues
-    if (!image.accessible) {
-      issues.push("Image not accessible");
-      overallStatus = "fail";
-    } else {
-      if (type === "og" || type === "twitter") {
-        if (image.width && image.width < OG_IMAGE_LIMITS.idealWidth * 0.8) {
-          issues.push(
-            `Width (${image.width}px) below recommended ${OG_IMAGE_LIMITS.idealWidth}px`,
-          );
-          overallStatus = "warning";
-        }
-        if (image.height && image.height < OG_IMAGE_LIMITS.idealHeight * 0.8) {
-          issues.push(
-            `Height (${image.height}px) below recommended ${OG_IMAGE_LIMITS.idealHeight}px`,
-          );
-          overallStatus = "warning";
-        }
-        if (
-          image.fileSize &&
-          image.fileSize > OG_IMAGE_LIMITS.warningFileSize
-        ) {
-          issues.push(
-            `File size (${formatBytes(image.fileSize)}) exceeds 100KB recommendation`,
-          );
-          overallStatus = "warning";
-        }
-        if (
-          image.loadTime &&
-          image.loadTime > OG_IMAGE_LIMITS.warningLoadTime
-        ) {
-          issues.push(
-            `Load time (${formatMs(image.loadTime)}) exceeds 500ms recommendation`,
-          );
-          overallStatus = "warning";
-        }
-      }
-      if (!image.alt) {
-        issues.push("Missing alt text");
-        if (overallStatus === "pass") overallStatus = "warning";
-      }
-    }
-
+  if (!image) {
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ImageIcon className="h-5 w-5" />
-              {title}
-            </CardTitle>
-            <Badge
-              variant={
-                overallStatus === "pass"
-                  ? "default"
-                  : overallStatus === "warning"
-                    ? "secondary"
-                    : "destructive"
-              }
-              className={
-                overallStatus === "pass"
-                  ? "bg-emerald-500"
-                  : overallStatus === "warning"
-                    ? "bg-yellow-500"
-                    : ""
-              }
-            >
-              {overallStatus === "pass"
-                ? "Good"
-                : overallStatus === "warning"
-                  ? "Needs Attention"
-                  : "Error"}
-            </Badge>
-          </div>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ImageIcon className="h-5 w-5" />
+            {title}
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Image Preview */}
-          <div className="relative aspect-[1.91/1] max-w-md rounded-lg overflow-hidden bg-muted">
-            {image.accessible ? (
-              <img
-                src={image.url}
-                alt={image.alt || "Preview"}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center text-red-500">
-                  <XCircle className="h-8 w-8 mx-auto mb-2" />
-                  <p className="text-sm">{image.error || "Failed to load"}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Image Properties */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-              <Ruler className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">Dimensions</div>
-                <div className="text-sm font-medium">
-                  {image.width && image.height
-                    ? `${image.width} × ${image.height}`
-                    : "Unknown"}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-              <FileType className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">Format</div>
-                <div className="text-sm font-medium">
-                  {image.format || "Unknown"}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-              <HardDrive className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">File Size</div>
-                <div className="text-sm font-medium">
-                  {image.fileSize ? formatBytes(image.fileSize) : "Unknown"}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">Load Time</div>
-                <div className="text-sm font-medium">
-                  {image.loadTime ? formatMs(image.loadTime) : "Unknown"}
-                </div>
-              </div>
-            </div>
-            {image.aspectRatio && (
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                <Ruler className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <div className="text-xs text-muted-foreground">
-                    Aspect Ratio
-                  </div>
-                  <div className="text-sm font-medium">{image.aspectRatio}</div>
-                </div>
-              </div>
-            )}
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-              <Accessibility className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <div className="text-xs text-muted-foreground">Alt Text</div>
-                <div className="text-sm font-medium">
-                  {image.alt ? "Set" : "Missing"}
-                </div>
-              </div>
+        <CardContent>
+          <div className="flex items-center justify-center h-32 bg-muted rounded-lg">
+            <div className="text-center text-muted-foreground">
+              <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No image specified</p>
             </div>
           </div>
-
-          {/* URL */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono bg-muted p-2 rounded">
-            <span className="truncate flex-1">{image.url}</span>
-            <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
-              <a href={image.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </Button>
-          </div>
-
-          {/* Issues */}
-          {issues.length > 0 && (
-            <div className="space-y-2">
-              {issues.map((issue, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-500"
-                >
-                  <AlertTriangle className="h-4 w-4 shrink-0" />
-                  {issue}
-                </div>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
     );
-  };
+  }
+
+  // Check for issues
+  if (!image.accessible) {
+    issues.push("Image not accessible");
+    overallStatus = "fail";
+  } else {
+    if (type === "og" || type === "twitter") {
+      if (image.width && image.width < OG_IMAGE_LIMITS.idealWidth * 0.8) {
+        issues.push(
+          `Width (${image.width}px) below recommended ${OG_IMAGE_LIMITS.idealWidth}px`,
+        );
+        overallStatus = "warning";
+      }
+      if (image.height && image.height < OG_IMAGE_LIMITS.idealHeight * 0.8) {
+        issues.push(
+          `Height (${image.height}px) below recommended ${OG_IMAGE_LIMITS.idealHeight}px`,
+        );
+        overallStatus = "warning";
+      }
+      if (image.fileSize && image.fileSize > OG_IMAGE_LIMITS.warningFileSize) {
+        issues.push(
+          `File size (${formatBytes(image.fileSize)}) exceeds 100KB recommendation`,
+        );
+        overallStatus = "warning";
+      }
+      if (image.loadTime && image.loadTime > OG_IMAGE_LIMITS.warningLoadTime) {
+        issues.push(
+          `Load time (${formatMs(image.loadTime)}) exceeds 500ms recommendation`,
+        );
+        overallStatus = "warning";
+      }
+    }
+    if (!image.alt) {
+      issues.push("Missing alt text");
+      if (overallStatus === "pass") overallStatus = "warning";
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ImageIcon className="h-5 w-5" />
+            {title}
+          </CardTitle>
+          <Badge
+            variant={
+              overallStatus === "pass"
+                ? "default"
+                : overallStatus === "warning"
+                  ? "secondary"
+                  : "destructive"
+            }
+            className={
+              overallStatus === "pass"
+                ? "bg-emerald-500"
+                : overallStatus === "warning"
+                  ? "bg-yellow-500"
+                  : ""
+            }
+          >
+            {overallStatus === "pass"
+              ? "Good"
+              : overallStatus === "warning"
+                ? "Needs Attention"
+                : "Error"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Image Preview */}
+        <div className="relative aspect-[1.91/1] max-w-md rounded-lg overflow-hidden bg-muted">
+          {image.accessible ? (
+            <img
+              src={image.url}
+              alt={image.alt || "Preview"}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-red-500">
+                <XCircle className="h-8 w-8 mx-auto mb-2" />
+                <p className="text-sm">{image.error || "Failed to load"}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Image Properties */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+            <Ruler className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">Dimensions</div>
+              <div className="text-sm font-medium">
+                {image.width && image.height
+                  ? `${image.width} × ${image.height}`
+                  : "Unknown"}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+            <FileType className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">Format</div>
+              <div className="text-sm font-medium">
+                {image.format || "Unknown"}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+            <HardDrive className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">File Size</div>
+              <div className="text-sm font-medium">
+                {image.fileSize ? formatBytes(image.fileSize) : "Unknown"}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">Load Time</div>
+              <div className="text-sm font-medium">
+                {image.loadTime ? formatMs(image.loadTime) : "Unknown"}
+              </div>
+            </div>
+          </div>
+          {image.aspectRatio && (
+            <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+              <Ruler className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <div className="text-xs text-muted-foreground">
+                  Aspect Ratio
+                </div>
+                <div className="text-sm font-medium">{image.aspectRatio}</div>
+              </div>
+            </div>
+          )}
+          <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+            <Accessibility className="h-4 w-4 text-muted-foreground" />
+            <div>
+              <div className="text-xs text-muted-foreground">Alt Text</div>
+              <div className="text-sm font-medium">
+                {image.alt ? "Set" : "Missing"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* URL */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono bg-muted p-2 rounded">
+          <span className="truncate flex-1">{image.url}</span>
+          <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
+            <a href={image.url} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </Button>
+        </div>
+
+        {/* Issues */}
+        {issues.length > 0 && (
+          <div className="space-y-2">
+            {issues.map((issue, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 text-sm text-yellow-600 dark:text-yellow-500"
+              >
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                {issue}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ImagesTab({ result }: ImagesTabProps) {
+  const { images } = result;
 
   // Platform fit table data
-  const platformFitData = Object.entries(PLATFORMS).map(([key, config]) => {
+  const platformFitData = Object.entries(PLATFORMS).map(([, config]) => {
     const ogImage = images.ogImage;
     let fit: "perfect" | "resize" | "crop" | "none" = "none";
     let note = "";

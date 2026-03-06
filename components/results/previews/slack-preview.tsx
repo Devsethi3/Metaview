@@ -4,7 +4,6 @@
 import type { PlatformPreview } from "@/types";
 import { truncate, extractDomain } from "@/lib/utils";
 import { getFaviconUrl } from "@/lib/url-helpers";
-import { ImageIcon } from "lucide-react";
 
 interface SlackPreviewProps {
   preview: PlatformPreview;

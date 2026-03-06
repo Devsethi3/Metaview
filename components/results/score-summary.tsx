@@ -20,13 +20,6 @@ export function ScoreSummary({ result }: ScoreSummaryProps) {
     return "text-red-500";
   };
 
-  const getGradeBg = (grade: string) => {
-    if (grade.startsWith("A")) return "bg-emerald-500";
-    if (grade.startsWith("B")) return "bg-yellow-500";
-    if (grade === "C") return "bg-orange-500";
-    return "bg-red-500";
-  };
-
   const getGradeRing = (grade: string) => {
     if (grade.startsWith("A")) return "ring-emerald-500/20";
     if (grade.startsWith("B")) return "ring-yellow-500/20";

@@ -1,4 +1,3 @@
-// app/actions/analyze-image.ts
 "use server";
 
 import type { ImageAnalysis } from "@/types";
@@ -10,7 +9,6 @@ export async function analyzeImage(
   const startTime = Date.now();
 
   try {
-    // First, make a HEAD request to get basic info
     const headResponse = await fetch(url, {
       method: "HEAD",
       signal: AbortSignal.timeout(5000),
@@ -35,7 +33,6 @@ export async function analyzeImage(
     const contentLength = headResponse.headers.get("content-length");
     const fileSize = contentLength ? parseInt(contentLength) : null;
 
-    // Determine format from content-type
     let format: string | null = null;
     if (contentType) {
       if (contentType.includes("jpeg") || contentType.includes("jpg"))
@@ -48,13 +45,10 @@ export async function analyzeImage(
       else if (contentType.includes("ico")) format = "ICO";
     }
 
-    // For getting dimensions, we need to fetch the image
-    // Using a partial fetch for efficiency
     let width: number | null = null;
     let height: number | null = null;
 
     try {
-      // Fetch first 64KB to get dimensions from header
       const imageResponse = await fetch(url, {
         headers: {
           Range: "bytes=0-65535",

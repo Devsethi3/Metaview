@@ -1,7 +1,5 @@
-// components/results/tabs/twitter-tab.tsx
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +10,6 @@ import {
   AlertTriangle,
   Copy,
   ArrowRight,
-  Image as ImageIcon,
 } from "lucide-react";
 import type { AnalysisResult } from "@/types";
 import { TwitterPreview } from "../previews/twitter-preview";
@@ -23,18 +20,23 @@ interface TwitterTabProps {
   result: AnalysisResult;
 }
 
+type Status = "pass" | "warning" | "fail";
+
+// Moved StatusIcon outside of TwitterTab to fix lint errors
+function StatusIcon({ status }: { status: Status }) {
+  if (status === "pass") {
+    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+  }
+  if (status === "warning") {
+    return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+  }
+  return <XCircle className="h-4 w-4 text-red-500" />;
+}
+
 export function TwitterTab({ result }: TwitterTabProps) {
   const twitter = result.twitter;
   const og = result.openGraph;
   const basic = result.basic;
-
-  const StatusIcon = ({ status }: { status: "pass" | "warning" | "fail" }) => {
-    if (status === "pass")
-      return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-    if (status === "warning")
-      return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-    return <XCircle className="h-4 w-4 text-red-500" />;
-  };
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -166,7 +168,7 @@ export function TwitterTab({ result }: TwitterTabProps) {
 
   // Generate fix code
   const missingTags = twitterTags.filter(
-    (t) => !t.value && (t.required || t.label === "twitter:image"),
+    (t) => !t.value && (t.required || t.label === "twitter:image")
   );
   const generateFixCode = () => {
     if (missingTags.length === 0) return null;
@@ -287,7 +289,8 @@ ${missingTags
                   </div>
                   {usedIndex >= 0 && (
                     <p className="text-xs text-muted-foreground mt-2 truncate">
-                      Value: "{chain.chain[usedIndex].value?.slice(0, 80)}..."
+                      Value: &ldquo;
+                      {chain.chain[usedIndex].value?.slice(0, 80)}...&rdquo;
                     </p>
                   )}
                   {usedIndex === -1 && (
@@ -338,7 +341,7 @@ ${missingTags
                             Missing — falling back to {tag.fallbackSource}:
                           </span>
                           <span className="ml-2 text-muted-foreground">
-                            "{tag.fallback?.slice(0, 60)}..."
+                            &ldquo;{tag.fallback?.slice(0, 60)}...&rdquo;
                           </span>
                         </div>
                       ) : (

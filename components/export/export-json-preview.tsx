@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {  useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CodeBlock, CodeBlockCode } from "@/components/ui/code-block";
 import { Copy, Check } from "lucide-react";

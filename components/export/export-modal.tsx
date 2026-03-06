@@ -23,8 +23,6 @@ import {
   FileJson,
   Download,
   Loader2,
-  Copy,
-  Check,
 } from "lucide-react";
 import type { AnalysisResult } from "@/types";
 import { ExportPngPreview } from "./export-png-preview";

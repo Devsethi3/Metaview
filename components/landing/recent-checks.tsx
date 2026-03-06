@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useAnalysisStore } from "@/stores/analysis-store";
@@ -45,15 +44,9 @@ const itemVariants = {
 };
 
 export function RecentChecks() {
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { history, removeFromHistory, clearHistory } = useAnalysisStore();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted || history.length === 0) return null;
+  if (history.length === 0) return null;
 
   const recentHistory = history.slice(0, 6);
 

@@ -1,4 +1,3 @@
-// app/actions/analyze-url.ts
 "use server";
 
 import { z } from "zod";
@@ -34,7 +33,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
   console.log("[analyzeUrl] Starting analysis for:", inputUrl);
 
   try {
-    // Normalize and validate URL
     const url = normalizeUrl(inputUrl);
     console.log("[analyzeUrl] Normalized URL:", url);
 
@@ -51,7 +49,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       };
     }
 
-    // Check for localhost
     if (url.includes("localhost") || url.includes("127.0.0.1")) {
       return {
         success: false,
@@ -60,7 +57,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       };
     }
 
-    // Fetch the page with timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -132,19 +128,15 @@ export async function analyzeUrl(inputUrl: string): Promise<{
 
     const $ = cheerio.load(html);
 
-    // Extract raw head content
     const rawHead = $("head").html() || "";
 
-    // Parse all meta tags
     const rawTags: MetaTag[] = [];
 
-    // Title
     const titleText = $("title").first().text().trim();
     if (titleText) {
       rawTags.push({ type: "title", name: "title", value: titleText });
     }
 
-    // Meta tags
     $("meta").each((_, el) => {
       const $el = $(el);
       const name = $el.attr("name") || "";
@@ -179,7 +171,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       }
     });
 
-    // Link tags
     $("link").each((_, el) => {
       const $el = $(el);
       const rel = $el.attr("rel") || "";
@@ -192,7 +183,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
 
     console.log("[analyzeUrl] Found", rawTags.length, "meta tags");
 
-    // Extract basic meta
     const basic: BasicMeta = {
       title: titleText || null,
       titleLength: titleText?.length || 0,
@@ -220,7 +210,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       robots: $('meta[name="robots"]').attr("content") || null,
     };
 
-    // Extract Open Graph
     const openGraph: OpenGraphMeta = {
       title: $('meta[property="og:title"]').attr("content") || null,
       description: $('meta[property="og:description"]').attr("content") || null,
@@ -252,7 +241,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
           .filter(Boolean) as string[]) || null,
     };
 
-    // Extract Twitter Card
     const twitter: TwitterMeta = {
       card:
         $('meta[name="twitter:card"]').attr("content") ||
@@ -290,7 +278,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       ogImage: openGraph.image?.slice(0, 50),
     });
 
-    // Parse base URL for resolving relative URLs
     const baseUrl = new URL(currentUrl);
     const resolveUrl = (path: string | null): string | null => {
       if (!path) return null;
@@ -301,7 +288,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       }
     };
 
-    // Analyze images in parallel (with error handling for each)
     console.log("[analyzeUrl] Analyzing images...");
     const [
       ogImageAnalysis,
@@ -336,7 +322,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
         : Promise.resolve(null),
     ]);
 
-    // Fetch robots.txt and sitemap in parallel
     console.log("[analyzeUrl] Fetching robots.txt and sitemap...");
     const [robotsResult, sitemapResult] = await Promise.all([
       fetchRobotsTxt(baseUrl.origin).catch((e) => {
@@ -349,7 +334,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       }),
     ]);
 
-    // Site configuration
     const site: SiteConfig = {
       https: baseUrl.protocol === "https:",
       robotsTxt: robotsResult,
@@ -371,7 +355,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       },
     };
 
-    // Content structure analysis
     const h1Elements = $("h1");
     const h1Contents: string[] = [];
     h1Elements.each((_, el) => {
@@ -413,7 +396,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       }
     });
 
-    // Links analysis
     const internalLinks: string[] = [];
     const externalLinks: string[] = [];
     let noFollow = 0;
@@ -461,7 +443,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       },
     };
 
-    // Accessibility basics
     let labeledInputs = 0;
     let unlabeledInputs = 0;
 
@@ -503,7 +484,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       },
     };
 
-    // Structured data
     const jsonLdScripts = $('script[type="application/ld+json"]');
     const structuredDataContent: object[] = [];
     const structuredDataTypes: string[] = [];
@@ -538,7 +518,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       errors: structuredDataErrors,
     };
 
-    // PWA metadata
     const pwa: PWAMetadata = {
       manifest: !!$('link[rel="manifest"]').attr("href"),
       serviceWorker: false,
@@ -546,7 +525,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       icons: !!(basic.favicon || basic.appleTouchIcon),
     };
 
-    // Performance metrics
     const performance: PerformanceMetrics = {
       lcp: null,
       cls: null,
@@ -564,7 +542,6 @@ export async function analyzeUrl(inputUrl: string): Promise<{
       jsErrors: [],
     };
 
-    // Calculate score
     const images_data = {
       ogImage: ogImageAnalysis,
       twitterImage: twitterImageAnalysis,

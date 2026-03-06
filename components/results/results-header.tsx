@@ -46,7 +46,6 @@ interface ResultsHeaderProps {
 export function ResultsHeader({
   result,
   onReanalyze,
-  cacheInfo,
 }: ResultsHeaderProps) {
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);

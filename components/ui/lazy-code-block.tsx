@@ -32,7 +32,6 @@ export const LazyCodeBlock = memo(function LazyCodeBlock({
   theme = "github-dark",
   className,
   maxHeight = "500px",
-  placeholder,
 }: LazyCodeBlockProps) {
   const MAX_CHARS = 50000
   const truncatedCode =
