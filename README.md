@@ -1,17 +1,17 @@
 <div align="center">
-  <img src="public/logo.svg" alt="Archway Logo" width="120" height="120" />
+  <img src="public/logo.svg" alt="Metaview Logo" width="120" height="120" />
   
   # Metaview
   
   Your link previews are broken. Find out why in seconds
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Site-black?style=for-the-badge)](https://metaview.devsethi.site)
-[![GitHub Stars](https://img.shields.io/github/stars/devsethi3/archway?style=for-the-badge&logo=github&color=yellow)](https://github.com/devsethi3/metaview)
-  <br />
+[![GitHub Stars](https://img.shields.io/github/stars/devsethi3/metaview?style=for-the-badge&logo=github&color=yellow)](https://github.com/devsethi3/metaview)
+<br />
 
 <!-- [Features](#-core-features) • [Quick Start](#-getting-started) • [Tech Stack](#-tech-stack) • [Contributing](#-contributing) • [License](#-license) -->
 
-<img src="public/screenshot.png" alt="Archway - Visual Architecture Design" width="750" />
+<img src="public/screenshot.png" alt="Metaview" width="750" />
 
 ---
 
@@ -125,12 +125,26 @@ Please ensure your code follows the existing style (Tailwind + TypeScript) and p
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+MIT License
 
-## Contact & Support
+Copyright (c) 2024 Dev Prasad Sethi
 
-If you have questions about using Metaview or want to suggest a new feature, feel free to open a discussion or reach out.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software...
 
-**Metaview** — See what matters in your website, with clear, actionable insights.
+## Author
+
+<img src="https://github.com/Devsethi3.png" width="80" height="80" style="border-radius: 50%;" alt="Dev Prasad Sethi" />
+
+### Dev Prasad Sethi
+
+[![Twitter](https://img.shields.io/badge/@imsethidev-1DA1F2?style=flat-square&logo=twitter&logoColor=white)](https://x.com/imsethidev)
+[![GitHub](https://img.shields.io/badge/Devsethi3-181717?style=flat-square&logo=github&logoColor=white)](https://github.com/Devsethi3)
+[![Portfolio](https://img.shields.io/badge/Portfolio-000000?style=flat-square&logo=vercel&logoColor=white)](https://devsethi.site)
+
+**Metaview** | See what matters in your website, with clear, actionable insights.
 
 © 2026 Metaview. All rights reserved.
