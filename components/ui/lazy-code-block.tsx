@@ -1,11 +1,9 @@
-// components/ui/lazy-code-block.tsx
 "use client"
 
 import { useState, useEffect, useRef, memo } from "react"
 import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 
-// Shared cache with code-block.tsx pattern
 const lazyHighlightCache = new Map<string, string>()
 
 function getCacheKey(code: string, language: string, theme: string): string {
@@ -58,7 +56,6 @@ export const LazyCodeBlock = memo(function LazyCodeBlock({
     mountedRef.current = true
     currentKeyRef.current = cacheKey
 
-    // Already have it — no work needed
     if (lazyHighlightCache.has(cacheKey)) {
       setHighlightedHtml(lazyHighlightCache.get(cacheKey)!)
       return
@@ -68,7 +65,6 @@ export const LazyCodeBlock = memo(function LazyCodeBlock({
 
     async function highlight() {
       try {
-        // Yield to main thread before heavy work
         await new Promise<void>((resolve) => {
           if ("requestIdleCallback" in window) {
             requestIdleCallback(() => resolve(), { timeout: 150 })
@@ -114,8 +110,6 @@ export const LazyCodeBlock = memo(function LazyCodeBlock({
     "font-mono"
   )
 
-  // If we have highlighted HTML (from cache or computed), render it directly
-  // No intermediate loading state when cached
   return (
     <div className={containerClass}>
       {isTruncated && (
@@ -143,7 +137,6 @@ export const LazyCodeBlock = memo(function LazyCodeBlock({
           </pre>
         </div>
       ) : (
-        // Loading: show plain code as stable placeholder — no layout shift
         <div className="relative">
           <div className={codeClass} style={{ maxHeight, overflowY: "auto" }}>
             <pre className="px-4 py-4">

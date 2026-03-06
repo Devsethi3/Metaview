@@ -1,10 +1,8 @@
-// components/ui/code-block.tsx
 "use client";
 
 import { cn } from "@/lib/utils";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 
-// Global cache for highlighted HTML — survives component unmount/remount
 const highlightCache = new Map<string, string>();
 
 function getCacheKey(code: string, language: string, theme: string): string {

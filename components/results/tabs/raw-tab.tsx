@@ -1,10 +1,8 @@
-// components/results/tabs/raw-tab.tsx
 "use client";
 
 import { useState, useMemo, useCallback, memo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -37,7 +35,6 @@ interface RawTabProps {
   result: AnalysisResult;
 }
 
-// ─── Memoized stat cards ──────────────────────────────────────────────
 
 const StatsCards = memo(function StatsCards({
   rawTags,
@@ -84,7 +81,6 @@ const StatsCards = memo(function StatsCards({
   );
 });
 
-// ─── Badge variant helper ─────────────────────────────────────────────
 
 const getBadgeVariant = (type: string): "default" | "secondary" | "outline" => {
   switch (type) {
@@ -97,7 +93,6 @@ const getBadgeVariant = (type: string): "default" | "secondary" | "outline" => {
   }
 };
 
-// ─── Memoized table row ───────────────────────────────────────────────
 
 const TagTableRow = memo(function TagTableRow({
   tag,
@@ -128,7 +123,6 @@ const TagTableRow = memo(function TagTableRow({
   );
 });
 
-// ─── Memoized table content ───────────────────────────────────────────
 
 const TableContent = memo(function TableContent({
   rawTags,
@@ -171,7 +165,6 @@ const TableContent = memo(function TableContent({
   );
 });
 
-// ─── JSON View — rendered once, hidden via CSS ────────────────────────
 
 const JsonView = memo(function JsonView({
   jsonOutput,
@@ -194,7 +187,6 @@ const JsonView = memo(function JsonView({
   );
 });
 
-// ─── HTML View — rendered once, hidden via CSS ────────────────────────
 
 const HtmlView = memo(function HtmlView({
   rawHead,
@@ -226,8 +218,6 @@ const HtmlView = memo(function HtmlView({
     </Card>
   );
 });
-
-// ─── Action buttons — memoized per view ───────────────────────────────
 
 const ActionButtons = memo(function ActionButtons({
   view,
@@ -302,7 +292,6 @@ const ActionButtons = memo(function ActionButtons({
   return null;
 });
 
-// ─── Main component ───────────────────────────────────────────────────
 
 export function RawTab({ result }: RawTabProps) {
   const [view, setView] = useState<"table" | "json" | "html">("table");
@@ -310,8 +299,6 @@ export function RawTab({ result }: RawTabProps) {
   const [copiedHtml, setCopiedHtml] = useState(false);
   const { resolvedTheme } = useTheme();
 
-  // Track which views have been activated at least once
-  // so we render them once and keep them alive (hidden via CSS)
   const activatedRef = useRef<Set<string>>(new Set(["table"]));
   if (!activatedRef.current.has(view)) {
     activatedRef.current.add(view);
@@ -387,7 +374,6 @@ export function RawTab({ result }: RawTabProps) {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Tab bar + action buttons */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="inline-flex h-9 sm:h-10 items-center rounded-lg bg-muted p-1 text-muted-foreground">
           {(
@@ -433,12 +419,7 @@ export function RawTab({ result }: RawTabProps) {
           />
         </div>
       </div>
-
-      {/*
-        KEY FIX: Render all activated views but hide inactive ones with CSS.
-        This prevents unmount/remount and re-triggering of useEffect/shiki.
-        Views are only mounted once when first selected ("lazy mount").
-      */}
+      
       <div className="relative">
         {activated.has("table") && (
           <div className={view === "table" ? "block" : "hidden"}>
