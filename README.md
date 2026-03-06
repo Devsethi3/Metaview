@@ -1,28 +1,22 @@
-# Metaview
-
 <div align="center">
-  <img src="/public/logo.png" alt="Metaview Logo" width="120" height="120" />
+  <img src="public/logo.svg" alt="Archway Logo" width="120" height="120" />
+  
+  # Metaview
+  
+  Your link previews are broken. Find out why in seconds
+
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Site-black?style=for-the-badge)](https://metaview.devsethi.site)
+[![GitHub Stars](https://img.shields.io/github/stars/devsethi3/archway?style=for-the-badge&logo=github&color=yellow)](https://github.com/devsethi3/metaview)
   <br />
-  <br />
 
-**Your link previews are broken. Find out why in seconds.**
-<br />
-<br />
+<!-- [Features](#-core-features) • [Quick Start](#-getting-started) • [Tech Stack](#-tech-stack) • [Contributing](#-contributing) • [License](#-license) -->
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+<img src="public/screenshot.png" alt="Archway - Visual Architecture Design" width="750" />
 
-[Live Demo](https://metaview.devsethi.site) · [Report Bug](https://github.com/devsethi3/metaview/issues) · [Request Feature](https://github.com/devsethi3/metaview/issues)
+---
 
 </div>
-
-<br />
-
-![Metaview Dashboard Preview](/public//screenshot.png)
-
-## 📖 Overview
+## Overview
 
 **Metaview** is an open-source developer tool designed to debug, analyze, and optimize Open Graph (OG) tags and Twitter Cards.
 
@@ -30,15 +24,15 @@ In the modern web, a link is often the first interaction a user has with your pr
 
 Built with performance in mind using Next.js 16 and Cheerio, it runs analysis locally or via edge functions to return results in milliseconds.
 
-## ✨ Key Features
+## Key Features
 
-### 🔍 Deep Analysis & Scoring
+### Deep Analysis & Scoring
 
 - **35+ Quality Checks:** We validate essential meta tags, Open Graph protocols, Twitter Cards, and technical SEO requirements.
 - **Smart Scoring:** Algorithms grade your metadata from **A to F** based on completeness, image aspect ratios, and tag redundancy.
 - **Image Intelligence:** Automatically analyzes OG image dimensions, file size, and load time to ensure they render correctly on all devices.
 
-### 📱 9+ Platform Previews
+### 9+ Platform Previews
 
 See exactly how your link renders before you ship. Metaview emulates the parsing logic of:
 
@@ -49,19 +43,19 @@ See exactly how your link renders before you ship. Metaview emulates the parsing
 - WhatsApp, Telegram & iMessage
 - Facebook
 
-### 🛠 Developer-First Tooling
+### Developer-First Tooling
 
 - **Framework-Specific Fixes:** Don't just see the error—fix it. Get ready-to-use code snippets for **Next.js**, **Astro**, **Hugo**, and plain **HTML**.
 - **Raw Data Export:** Download parsed metadata as JSON, CSV, or raw HTML for debugging or documentation.
 - **Shareable Reports:** Generate a unique URL to share analysis results with your marketing team or clients.
 - **Social Cards:** Export your score as a high-quality PNG to share on social media.
 
-### ⚡ Performance & Privacy
+### Performance & Privacy
 
 - **Local History:** All checks are stored in `localStorage`. No account required.
 - **Lightning Fast:** Powered by `cheerio` on the edge for rapid HTML parsing.
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 - **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
 - **Styling:** [Tailwind CSS](https://tailwindcss.com/)
@@ -71,7 +65,7 @@ See exactly how your link renders before you ship. Metaview emulates the parsing
 - **Animations:** [Motion](https://motion.dev/) (formerly Framer Motion)
 - **Export:** [html-to-image](https://github.com/bubkoo/html-to-image)
 
-## 🚀 How It Works
+## How It Works
 
 1.  **Input:** The user enters a URL.
 2.  **Fetch & Parse:** An API route fetches the target HTML and uses `cheerio` to scrape `<meta>` tags, looking for standard SEO, OG, and Twitter properties.
@@ -79,7 +73,7 @@ See exactly how your link renders before you ship. Metaview emulates the parsing
 4.  **Simulation:** The frontend uses these properties to render pixel-perfect replicas of social media cards.
 5.  **Recommendation:** Missing or incorrect tags generate specific code snippets based on the user's selected tech stack.
 
-## 💻 Installation & Local Setup
+## Installation & Local Setup
 
 Prerequisites: Node.js 18+ and npm/yarn/pnpm.
 
@@ -116,27 +110,7 @@ Prerequisites: Node.js 18+ and npm/yarn/pnpm.
 5.  **Open locally**
     Visit `http://localhost:3000` to see the app.
 
-## 📂 Project Structure
-
-```bash
-metaview/
-├── app/                  # Next.js 16 App Router
-│   ├── api/              # Server-side scraping logic (Cheerio)
-│   ├── layout.tsx        # Root layout
-│   └── page.tsx          # Main dashboard
-├── components/
-│   ├── analysis/         # Score cards, error logs, and fixes
-│   ├── previews/         # Social media card simulation components
-│   └── ui/               # Shadcn UI primitives
-├── lib/
-│   ├── checks/           # Validation logic & scoring algorithms
-│   ├── scraper.ts        # HTML parsing utilities
-│   └── utils.ts          # Tailwind helpers
-├── store/                # Zustand stores (history, settings)
-└── public/               # Static assets
-```
-
-## 🤝 Contribution Guidelines
+## Contribution Guidelines
 
 We love contributions! Whether it's adding a new platform preview, improving the scoring algorithm, or fixing a bug.
 
@@ -148,11 +122,11 @@ We love contributions! Whether it's adding a new platform preview, improving the
 
 Please ensure your code follows the existing style (Tailwind + TypeScript) and passes all linting checks.
 
-## 📝 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-## 📧 Contact & Support
+## Contact & Support
 
 If you have questions about using Metaview or want to suggest a new feature, feel free to open a discussion or reach out.
 
