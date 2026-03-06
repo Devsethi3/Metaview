@@ -49,7 +49,7 @@ const TWITTER_HANDLE = "@imsethidev";
 
 export const metadata: Metadata = {
   title: {
-    default: "Metaview | Analyze Meta Tags & Preview Social Cards Instantly",
+    default: "Metaview | Meta Tag Analyzer & Social Preview Tool",
     template: "%s | Metaview",
   },
   description: SITE_DESCRIPTION,
@@ -90,7 +90,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: "Metaview | Analyze Meta Tags & Preview Social Cards Instantly",
+    title: "Metaview | Meta Tag Analyzer & Social Preview Tool",
     description: SITE_DESCRIPTION,
     images: [
       {
