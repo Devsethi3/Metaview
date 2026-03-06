@@ -1,13 +1,28 @@
-"use client"
+// components/ui/code-block.tsx
+"use client";
 
-import { cn } from "@/lib/utils"
-import React, { useEffect, useState } from "react"
-import { codeToHtml } from "shiki"
+import { cn } from "@/lib/utils";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+
+// Global cache for highlighted HTML — survives component unmount/remount
+const highlightCache = new Map<string, string>();
+
+function getCacheKey(code: string, language: string, theme: string): string {
+  // Use a fast hash to avoid storing huge keys
+  let hash = 0;
+  const str = `${language}:${theme}:${code}`;
+  for (let i = 0; i < Math.min(str.length, 500); i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return `${language}:${theme}:${code.length}:${hash}`;
+}
 
 export type CodeBlockProps = {
-  children?: React.ReactNode
-  className?: string
-} & React.HTMLProps<HTMLDivElement>
+  children?: React.ReactNode;
+  className?: string;
+} & React.HTMLProps<HTMLDivElement>;
 
 function CodeBlock({ children, className, ...props }: CodeBlockProps) {
   return (
@@ -15,21 +30,21 @@ function CodeBlock({ children, className, ...props }: CodeBlockProps) {
       className={cn(
         "not-prose flex w-full flex-col overflow-clip border",
         "border-border bg-card text-card-foreground rounded-xl",
-        className
+        className,
       )}
       {...props}
     >
       {children}
     </div>
-  )
+  );
 }
 
 export type CodeBlockCodeProps = {
-  code: string
-  language?: string
-  theme?: string
-  className?: string
-} & React.HTMLProps<HTMLDivElement>
+  code: string;
+  language?: string;
+  theme?: string;
+  className?: string;
+} & React.HTMLProps<HTMLDivElement>;
 
 function CodeBlockCode({
   code,
@@ -38,27 +53,65 @@ function CodeBlockCode({
   className,
   ...props
 }: CodeBlockCodeProps) {
-  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null)
+  const cacheKey = getCacheKey(code, language, theme);
+  const cached = highlightCache.get(cacheKey);
+
+  // Initialize with cached value if available — no flash
+  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(
+    cached ?? null,
+  );
+  const mountedRef = useRef(true);
+  const currentKeyRef = useRef(cacheKey);
 
   useEffect(() => {
-    async function highlight() {
-      if (!code) {
-        setHighlightedHtml("<pre><code></code></pre>")
-        return
-      }
+    mountedRef.current = true;
+    currentKeyRef.current = cacheKey;
 
-      const html = await codeToHtml(code, { lang: language, theme })
-      setHighlightedHtml(html)
+    // Already cached — set immediately and skip
+    if (highlightCache.has(cacheKey)) {
+      setHighlightedHtml(highlightCache.get(cacheKey)!);
+      return;
     }
-    highlight()
-  }, [code, language, theme])
+
+    if (!code) {
+      const empty = "<pre><code></code></pre>";
+      setHighlightedHtml(empty);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function highlight() {
+      try {
+        const { codeToHtml } = await import("shiki");
+        const html = await codeToHtml(code, { lang: language, theme });
+
+        if (
+          !cancelled &&
+          mountedRef.current &&
+          currentKeyRef.current === cacheKey
+        ) {
+          highlightCache.set(cacheKey, html);
+          setHighlightedHtml(html);
+        }
+      } catch (err) {
+        console.error("Highlighting failed:", err);
+      }
+    }
+
+    highlight();
+
+    return () => {
+      cancelled = true;
+      mountedRef.current = false;
+    };
+  }, [cacheKey, code, language, theme]);
 
   const classNames = cn(
     "w-full overflow-x-auto text-[13px] [&>pre]:px-4 [&>pre]:py-4",
-    className
-  )
+    className,
+  );
 
-  // SSR fallback: render plain code if not hydrated yet
   return highlightedHtml ? (
     <div
       className={classNames}
@@ -67,14 +120,16 @@ function CodeBlockCode({
     />
   ) : (
     <div className={classNames} {...props}>
-      <pre>
-        <code>{code}</code>
+      <pre className="px-4 py-4">
+        <code className="text-muted-foreground whitespace-pre-wrap break-all">
+          {code}
+        </code>
       </pre>
     </div>
-  )
+  );
 }
 
-export type CodeBlockGroupProps = React.HTMLAttributes<HTMLDivElement>
+export type CodeBlockGroupProps = React.HTMLAttributes<HTMLDivElement>;
 
 function CodeBlockGroup({
   children,
@@ -88,7 +143,7 @@ function CodeBlockGroup({
     >
       {children}
     </div>
-  )
+  );
 }
 
-export { CodeBlockGroup, CodeBlockCode, CodeBlock }
+export { CodeBlockGroup, CodeBlockCode, CodeBlock };

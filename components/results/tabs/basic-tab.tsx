@@ -161,7 +161,7 @@ export function BasicTab({ result }: BasicTabProps) {
         <CardContent className="space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="text-lg font-medium break-all">
+              <p className="text-lg font-medium">
                 {result.basic.title || (
                   <span className="text-red-500">Missing title tag</span>
                 )}
@@ -200,7 +200,7 @@ export function BasicTab({ result }: BasicTabProps) {
         <CardContent className="space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="text-muted-foreground break-all">
+              <p className="text-muted-foreground">
                 {result.basic.description || (
                   <span className="text-red-500">Missing meta description</span>
                 )}

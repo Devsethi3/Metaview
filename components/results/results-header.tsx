@@ -144,7 +144,7 @@ export function ResultsHeader({
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <a
+                      <Link
                         href={result.url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -152,7 +152,7 @@ export function ResultsHeader({
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                         <span className="sr-only">Open URL</span>
-                      </a>
+                      </Link>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
                       Open in new tab
@@ -161,7 +161,7 @@ export function ResultsHeader({
                 </TooltipProvider>
 
                 {/* Copy URL Button */}
-                <TooltipProvider delayDuration={0}>
+                {/* <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -176,7 +176,7 @@ export function ResultsHeader({
                     </TooltipTrigger>
                     <TooltipContent side="bottom">Copy URL</TooltipContent>
                   </Tooltip>
-                </TooltipProvider>
+                </TooltipProvider> */}
               </div>
             </div>
 

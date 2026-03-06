@@ -1,7 +1,7 @@
 // components/results/tabs/raw-tab.tsx
 "use client";
 
-import { useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback, memo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,7 +22,6 @@ import {
   Code,
   FileJson,
   Check,
-  Loader2,
 } from "lucide-react";
 import type { AnalysisResult } from "@/types";
 import {
@@ -38,62 +37,74 @@ interface RawTabProps {
   result: AnalysisResult;
 }
 
-// Memoized stats cards to prevent re-renders
+// ─── Memoized stat cards ──────────────────────────────────────────────
+
 const StatsCards = memo(function StatsCards({
   rawTags,
 }: {
   rawTags: AnalysisResult["rawTags"];
 }) {
-  const stats = useMemo(
-    () => ({
-      basic: rawTags.filter((t) => t.type === "title" || t.type === "meta")
-        .length,
-      og: rawTags.filter((t) => t.type === "og").length,
-      twitter: rawTags.filter((t) => t.type === "twitter").length,
-      link: rawTags.filter((t) => t.type === "link").length,
-    }),
-    [rawTags],
+  const stats = useMemo(() => {
+    let basic = 0,
+      og = 0,
+      twitter = 0,
+      link = 0;
+    for (const t of rawTags) {
+      if (t.type === "title" || t.type === "meta") basic++;
+      else if (t.type === "og") og++;
+      else if (t.type === "twitter") twitter++;
+      else if (t.type === "link") link++;
+    }
+    return { basic, og, twitter, link };
+  }, [rawTags]);
+
+  const items = useMemo(
+    () => [
+      { label: "Basic Meta Tags", value: stats.basic },
+      { label: "Open Graph Tags", value: stats.og },
+      { label: "Twitter Tags", value: stats.twitter },
+      { label: "Link Tags", value: stats.link },
+    ],
+    [stats],
   );
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-2xl font-bold">{stats.basic}</div>
-          <div className="text-sm text-muted-foreground">Basic Meta Tags</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-2xl font-bold">{stats.og}</div>
-          <div className="text-sm text-muted-foreground">Open Graph Tags</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-2xl font-bold">{stats.twitter}</div>
-          <div className="text-sm text-muted-foreground">Twitter Tags</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-2xl font-bold">{stats.link}</div>
-          <div className="text-sm text-muted-foreground">Link Tags</div>
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {items.map((item) => (
+        <Card key={item.label}>
+          <CardContent className="pt-4 pb-4 sm:pt-6">
+            <div className="text-xl sm:text-2xl font-bold">{item.value}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">
+              {item.label}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 });
 
-// Memoized table row component
+// ─── Badge variant helper ─────────────────────────────────────────────
+
+const getBadgeVariant = (type: string): "default" | "secondary" | "outline" => {
+  switch (type) {
+    case "og":
+      return "default";
+    case "twitter":
+      return "secondary";
+    default:
+      return "outline";
+  }
+};
+
+// ─── Memoized table row ───────────────────────────────────────────────
+
 const TagTableRow = memo(function TagTableRow({
   tag,
   index,
-  getBadgeVariant,
 }: {
   tag: AnalysisResult["rawTags"][0];
   index: number;
-  getBadgeVariant: (type: string) => "default" | "secondary" | "outline";
 }) {
   return (
     <TableRow>
@@ -105,8 +116,10 @@ const TagTableRow = memo(function TagTableRow({
           {tag.type}
         </Badge>
       </TableCell>
-      <TableCell className="font-mono text-xs">{tag.name}</TableCell>
-      <TableCell className="max-w-md">
+      <TableCell className="font-mono text-xs max-w-[120px] sm:max-w-none truncate sm:overflow-visible">
+        {tag.name}
+      </TableCell>
+      <TableCell className="max-w-[200px] sm:max-w-md">
         <span className="text-sm break-all line-clamp-2">
           {tag.value || <span className="text-muted-foreground">—</span>}
         </span>
@@ -115,42 +128,29 @@ const TagTableRow = memo(function TagTableRow({
   );
 });
 
-// Memoized table content
+// ─── Memoized table content ───────────────────────────────────────────
+
 const TableContent = memo(function TableContent({
   rawTags,
 }: {
   rawTags: AnalysisResult["rawTags"];
 }) {
-  const getBadgeVariant = useCallback(
-    (type: string): "default" | "secondary" | "outline" => {
-      switch (type) {
-        case "og":
-          return "default";
-        case "twitter":
-          return "secondary";
-        default:
-          return "outline";
-      }
-    },
-    [],
-  );
-
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="text-sm sm:text-base">
           All Meta Tags ({rawTags.length})
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-2 sm:px-6">
         <div className="rounded-lg border overflow-hidden">
-          <div className="overflow-x-auto max-h-[500px]">
+          <div className="overflow-x-auto max-h-[500px] overscroll-contain">
             <Table>
               <TableHeader className="sticky top-0 bg-background z-10">
                 <TableRow>
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead className="w-24">Type</TableHead>
-                  <TableHead className="w-48">Name</TableHead>
+                  <TableHead className="w-10 sm:w-12">#</TableHead>
+                  <TableHead className="w-20 sm:w-24">Type</TableHead>
+                  <TableHead className="w-32 sm:w-48">Name</TableHead>
                   <TableHead>Value</TableHead>
                 </TableRow>
               </TableHeader>
@@ -160,7 +160,6 @@ const TableContent = memo(function TableContent({
                     key={`${tag.type}-${tag.name}-${i}`}
                     tag={tag}
                     index={i}
-                    getBadgeVariant={getBadgeVariant}
                   />
                 ))}
               </TableBody>
@@ -172,17 +171,138 @@ const TableContent = memo(function TableContent({
   );
 });
 
-// Loading placeholder for code blocks
-const CodeLoadingPlaceholder = memo(function CodeLoadingPlaceholder() {
+// ─── JSON View — rendered once, hidden via CSS ────────────────────────
+
+const JsonView = memo(function JsonView({
+  jsonOutput,
+  codeTheme,
+}: {
+  jsonOutput: string;
+  codeTheme: string;
+}) {
   return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      <span className="ml-2 text-sm text-muted-foreground">
-        Loading content...
-      </span>
-    </div>
+    <Card>
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="text-sm sm:text-base">JSON Export</CardTitle>
+      </CardHeader>
+      <CardContent className="px-2 sm:px-6">
+        <CodeBlock className="max-h-[500px] overflow-auto">
+          <CodeBlockCode code={jsonOutput} language="json" theme={codeTheme} />
+        </CodeBlock>
+      </CardContent>
+    </Card>
   );
 });
+
+// ─── HTML View — rendered once, hidden via CSS ────────────────────────
+
+const HtmlView = memo(function HtmlView({
+  rawHead,
+  codeTheme,
+}: {
+  rawHead: string;
+  codeTheme: string;
+}) {
+  return (
+    <Card>
+      <CardHeader className="pb-3 sm:pb-6">
+        <CardTitle className="text-sm sm:text-base">
+          Raw HTML &lt;head&gt;
+          {rawHead.length > 10000 && (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              ({Math.round(rawHead.length / 1024)}KB)
+            </span>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-2 sm:px-6">
+        <LazyCodeBlock
+          code={rawHead}
+          language="html"
+          theme={codeTheme}
+          maxHeight="500px"
+        />
+      </CardContent>
+    </Card>
+  );
+});
+
+// ─── Action buttons — memoized per view ───────────────────────────────
+
+const ActionButtons = memo(function ActionButtons({
+  view,
+  onCopyJson,
+  onCopyHtml,
+  onDownloadJson,
+  onDownloadHtml,
+  onDownloadCsv,
+  copiedJson,
+  copiedHtml,
+}: {
+  view: string;
+  onCopyJson: () => void;
+  onCopyHtml: () => void;
+  onDownloadJson: () => void;
+  onDownloadHtml: () => void;
+  onDownloadCsv: () => void;
+  copiedJson: boolean;
+  copiedHtml: boolean;
+}) {
+  if (view === "table") {
+    return (
+      <Button variant="outline" size="sm" onClick={onDownloadCsv}>
+        <Download className="h-4 w-4 sm:mr-2" />
+        <span className="hidden sm:inline">Download CSV</span>
+      </Button>
+    );
+  }
+
+  if (view === "json") {
+    return (
+      <>
+        <Button variant="outline" size="sm" onClick={onCopyJson}>
+          {copiedJson ? (
+            <Check className="h-4 w-4 sm:mr-2" />
+          ) : (
+            <Copy className="h-4 w-4 sm:mr-2" />
+          )}
+          <span className="hidden sm:inline">
+            {copiedJson ? "Copied" : "Copy"}
+          </span>
+        </Button>
+        <Button variant="outline" size="sm" onClick={onDownloadJson}>
+          <Download className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Download</span>
+        </Button>
+      </>
+    );
+  }
+
+  if (view === "html") {
+    return (
+      <>
+        <Button variant="outline" size="sm" onClick={onCopyHtml}>
+          {copiedHtml ? (
+            <Check className="h-4 w-4 sm:mr-2" />
+          ) : (
+            <Copy className="h-4 w-4 sm:mr-2" />
+          )}
+          <span className="hidden sm:inline">
+            {copiedHtml ? "Copied" : "Copy"}
+          </span>
+        </Button>
+        <Button variant="outline" size="sm" onClick={onDownloadHtml}>
+          <Download className="h-4 w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Download</span>
+        </Button>
+      </>
+    );
+  }
+
+  return null;
+});
+
+// ─── Main component ───────────────────────────────────────────────────
 
 export function RawTab({ result }: RawTabProps) {
   const [view, setView] = useState<"table" | "json" | "html">("table");
@@ -190,11 +310,17 @@ export function RawTab({ result }: RawTabProps) {
   const [copiedHtml, setCopiedHtml] = useState(false);
   const { resolvedTheme } = useTheme();
 
-  // Memoize expensive computations
+  // Track which views have been activated at least once
+  // so we render them once and keep them alive (hidden via CSS)
+  const activatedRef = useRef<Set<string>>(new Set(["table"]));
+  if (!activatedRef.current.has(view)) {
+    activatedRef.current.add(view);
+  }
+  const activated = activatedRef.current;
+
   const jsonOutput = useMemo(() => generateExportJSON(result), [result]);
   const codeTheme = resolvedTheme === "dark" ? "github-dark" : "github-light";
 
-  // Memoize handlers
   const handleCopyJson = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(jsonOutput);
@@ -249,143 +375,90 @@ export function RawTab({ result }: RawTabProps) {
     goeyToast.success("CSV downloaded");
   }, [result.rawTags, result.url]);
 
-  // Handle hydration
+  // Hydration guard — show skeleton only on first paint
   if (!resolvedTheme) {
     return (
       <div className="space-y-6">
-        <div className="h-12 bg-muted rounded animate-pulse" />
-        <div className="h-64 bg-muted rounded animate-pulse" />
+        <div className="h-10 sm:h-12 bg-muted rounded-lg animate-pulse" />
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <TabsList>
-            <TabsTrigger value="table" className="gap-2">
-              <TableIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">Table</span>
-            </TabsTrigger>
-            <TabsTrigger value="json" className="gap-2">
-              <FileJson className="h-4 w-4" />
-              <span className="hidden sm:inline">JSON</span>
-            </TabsTrigger>
-            <TabsTrigger value="html" className="gap-2">
-              <Code className="h-4 w-4" />
-              <span className="hidden sm:inline">HTML Head</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <div className="flex items-center gap-2">
-            {view === "table" && (
-              <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
-                <Download className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Download CSV</span>
-              </Button>
-            )}
-            {view === "json" && (
-              <>
-                <Button variant="outline" size="sm" onClick={handleCopyJson}>
-                  {copiedJson ? (
-                    <Check className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Copy className="h-4 w-4 mr-2" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {copiedJson ? "Copied" : "Copy"}
-                  </span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadJson}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Download</span>
-                </Button>
-              </>
-            )}
-            {view === "html" && (
-              <>
-                <Button variant="outline" size="sm" onClick={handleCopyHtml}>
-                  {copiedHtml ? (
-                    <Check className="h-4 w-4 mr-2" />
-                  ) : (
-                    <Copy className="h-4 w-4 mr-2" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {copiedHtml ? "Copied" : "Copy"}
-                  </span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadHtml}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Download</span>
-                </Button>
-              </>
-            )}
-          </div>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Tab bar + action buttons */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="inline-flex h-9 sm:h-10 items-center rounded-lg bg-muted p-1 text-muted-foreground">
+          {(
+            [
+              { value: "table", icon: TableIcon, label: "Table" },
+              { value: "json", icon: FileJson, label: "JSON" },
+              { value: "html", icon: Code, label: "HTML Head" },
+            ] as const
+          ).map(({ value, icon: Icon, label }) => (
+            <button
+              key={value}
+              onClick={() => setView(value)}
+              className={`
+                inline-flex items-center justify-center gap-1.5 sm:gap-2
+                whitespace-nowrap rounded-md px-2.5 sm:px-3 py-1 sm:py-1.5
+                text-xs sm:text-sm font-medium ring-offset-background
+                transition-all duration-150
+                focus-visible:outline-none focus-visible:ring-2
+                focus-visible:ring-ring focus-visible:ring-offset-2
+                ${
+                  view === value
+                    ? "bg-background text-foreground shadow-sm"
+                    : "hover:bg-background/50 hover:text-foreground"
+                }
+              `}
+            >
+              <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Table View */}
-        <TabsContent value="table" className="mt-0">
-          <TableContent rawTags={result.rawTags} />
-        </TabsContent>
+        <div className="flex items-center gap-2">
+          <ActionButtons
+            view={view}
+            onCopyJson={handleCopyJson}
+            onCopyHtml={handleCopyHtml}
+            onDownloadJson={handleDownloadJson}
+            onDownloadHtml={handleDownloadHtml}
+            onDownloadCsv={handleDownloadCsv}
+            copiedJson={copiedJson}
+            copiedHtml={copiedHtml}
+          />
+        </div>
+      </div>
 
-        {/* JSON View - Lazy loaded */}
-        <TabsContent value="json" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">JSON Export</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {view === "json" && (
-                <CodeBlock className="max-h-[500px] overflow-auto">
-                  <CodeBlockCode
-                    code={jsonOutput}
-                    language="json"
-                    theme={codeTheme}
-                  />
-                </CodeBlock>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/*
+        KEY FIX: Render all activated views but hide inactive ones with CSS.
+        This prevents unmount/remount and re-triggering of useEffect/shiki.
+        Views are only mounted once when first selected ("lazy mount").
+      */}
+      <div className="relative">
+        {activated.has("table") && (
+          <div className={view === "table" ? "block" : "hidden"}>
+            <TableContent rawTags={result.rawTags} />
+          </div>
+        )}
 
-        {/* HTML View - Lazy loaded with optimizations */}
-        <TabsContent value="html" className="mt-0">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                Raw HTML &lt;head&gt;
-                {result.rawHead.length > 10000 && (
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
-                    ({Math.round(result.rawHead.length / 1024)}KB)
-                  </span>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {view === "html" && (
-                <LazyCodeBlock
-                  code={result.rawHead}
-                  language="html"
-                  theme={codeTheme}
-                  maxHeight="500px"
-                  placeholder={<CodeLoadingPlaceholder />}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        {activated.has("json") && (
+          <div className={view === "json" ? "block" : "hidden"}>
+            <JsonView jsonOutput={jsonOutput} codeTheme={codeTheme} />
+          </div>
+        )}
 
-      {/* Stats Cards - Memoized */}
+        {activated.has("html") && (
+          <div className={view === "html" ? "block" : "hidden"}>
+            <HtmlView rawHead={result.rawHead} codeTheme={codeTheme} />
+          </div>
+        )}
+      </div>
+
       <StatsCards rawTags={result.rawTags} />
     </div>
   );

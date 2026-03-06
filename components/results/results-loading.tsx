@@ -72,7 +72,7 @@ export function ResultsLoading({ url }: ResultsLoadingProps) {
   }, []);
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
+    <div className="h-screen flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-8">
         {/* Main Central Loader */}
         <MorphingSquare />
@@ -82,11 +82,9 @@ export function ResultsLoading({ url }: ResultsLoadingProps) {
           <h2 className="text-xl font-semibold tracking-tight">
             Analyzing Website
           </h2>
-          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-muted/50 border border-border">
-            <span className="text-sm text-muted-foreground font-medium font-mono">
-              {extractDomain(url)}
-            </span>
-          </div>
+          <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-medium text-primary">
+            {extractDomain(url)}
+          </span>
         </div>
 
         {/* Progress steps */}

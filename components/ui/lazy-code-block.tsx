@@ -1,26 +1,33 @@
 // components/ui/lazy-code-block.tsx
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback, useRef, memo } from "react";
-import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { useState, useEffect, useRef, memo } from "react"
+import { cn } from "@/lib/utils"
+import { Loader2 } from "lucide-react"
 
-interface LazyCodeBlockProps {
-  code: string;
-  language?: string;
-  theme?: string;
-  className?: string;
-  maxHeight?: string;
-  placeholder?: React.ReactNode;
+// Shared cache with code-block.tsx pattern
+const lazyHighlightCache = new Map<string, string>()
+
+function getCacheKey(code: string, language: string, theme: string): string {
+  let hash = 0
+  const str = `${language}:${theme}:${code}`
+  for (let i = 0; i < Math.min(str.length, 500); i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash |= 0
+  }
+  return `lazy:${language}:${theme}:${code.length}:${hash}`
 }
 
-/**
- * Optimized code block with lazy syntax highlighting
- * - Defers highlighting to avoid blocking UI
- * - Shows plain text immediately, then highlights
- * - Truncates extremely large content
- * - Memoized to prevent unnecessary re-renders
- */
+interface LazyCodeBlockProps {
+  code: string
+  language?: string
+  theme?: string
+  className?: string
+  maxHeight?: string
+  placeholder?: React.ReactNode
+}
+
 export const LazyCodeBlock = memo(function LazyCodeBlock({
   code,
   language = "html",
@@ -29,140 +36,136 @@ export const LazyCodeBlock = memo(function LazyCodeBlock({
   maxHeight = "500px",
   placeholder,
 }: LazyCodeBlockProps) {
-  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(null);
-  const [isHighlighting, setIsHighlighting] = useState(false);
-  const [error, setError] = useState(false);
-  const mountedRef = useRef(true);
-  const highlightingRef = useRef(false);
-
-  // Truncate extremely large content to prevent performance issues
-  const MAX_CHARS = 50000; // ~50KB limit for highlighting
+  const MAX_CHARS = 50000
   const truncatedCode =
     code.length > MAX_CHARS
       ? code.slice(0, MAX_CHARS) +
         "\n\n/* ... Content truncated for performance ... */"
-      : code;
-  const isTruncated = code.length > MAX_CHARS;
+      : code
+  const isTruncated = code.length > MAX_CHARS
 
-  const highlight = useCallback(async () => {
-    // Prevent duplicate highlighting
-    if (highlightingRef.current) return;
-    highlightingRef.current = true;
-    setIsHighlighting(true);
+  const cacheKey = getCacheKey(truncatedCode, language, theme)
+  const cached = lazyHighlightCache.get(cacheKey)
 
-    try {
-      // Use requestIdleCallback or setTimeout to defer work
-      await new Promise<void>((resolve) => {
-        if ("requestIdleCallback" in window) {
-          requestIdleCallback(() => resolve(), { timeout: 100 });
-        } else {
-          setTimeout(resolve, 0);
-        }
-      });
-
-      if (!mountedRef.current) return;
-
-      // Dynamic import to reduce initial bundle
-      const { codeToHtml } = await import("shiki");
-
-      // Process in chunks for very large content
-      const html = await codeToHtml(truncatedCode, {
-        lang: language,
-        theme,
-      });
-
-      if (mountedRef.current) {
-        setHighlightedHtml(html);
-        setError(false);
-      }
-    } catch (err) {
-      console.error("Syntax highlighting failed:", err);
-      if (mountedRef.current) {
-        setError(true);
-      }
-    } finally {
-      if (mountedRef.current) {
-        setIsHighlighting(false);
-      }
-      highlightingRef.current = false;
-    }
-  }, [truncatedCode, language, theme]);
+  const [highlightedHtml, setHighlightedHtml] = useState<string | null>(
+    cached ?? null
+  )
+  const [error, setError] = useState(false)
+  const mountedRef = useRef(true)
+  const currentKeyRef = useRef(cacheKey)
 
   useEffect(() => {
-    mountedRef.current = true;
+    mountedRef.current = true
+    currentKeyRef.current = cacheKey
 
-    // Defer highlighting to next frame to prevent blocking
-    const timeoutId = setTimeout(() => {
-      highlight();
-    }, 50);
+    // Already have it — no work needed
+    if (lazyHighlightCache.has(cacheKey)) {
+      setHighlightedHtml(lazyHighlightCache.get(cacheKey)!)
+      return
+    }
+
+    let cancelled = false
+
+    async function highlight() {
+      try {
+        // Yield to main thread before heavy work
+        await new Promise<void>((resolve) => {
+          if ("requestIdleCallback" in window) {
+            requestIdleCallback(() => resolve(), { timeout: 150 })
+          } else {
+            setTimeout(resolve, 16)
+          }
+        })
+
+        if (cancelled) return
+
+        const { codeToHtml } = await import("shiki")
+        const html = await codeToHtml(truncatedCode, { lang: language, theme })
+
+        if (!cancelled && mountedRef.current && currentKeyRef.current === cacheKey) {
+          lazyHighlightCache.set(cacheKey, html)
+          setHighlightedHtml(html)
+          setError(false)
+        }
+      } catch (err) {
+        console.error("Syntax highlighting failed:", err)
+        if (!cancelled && mountedRef.current) {
+          setError(true)
+        }
+      }
+    }
+
+    highlight()
 
     return () => {
-      mountedRef.current = false;
-      clearTimeout(timeoutId);
-    };
-  }, [highlight]);
+      cancelled = true
+      mountedRef.current = false
+    }
+  }, [cacheKey, truncatedCode, language, theme])
 
   const containerClass = cn(
     "not-prose flex w-full flex-col overflow-clip border",
     "border-border bg-card text-card-foreground rounded-xl",
-    className,
-  );
+    className
+  )
 
   const codeClass = cn(
     "w-full overflow-x-auto text-[13px] [&>pre]:px-4 [&>pre]:py-4",
-    "font-mono",
-  );
+    "font-mono"
+  )
 
-  // Show placeholder while loading (if provided)
-  if (!highlightedHtml && placeholder) {
-    return <div className={containerClass}>{placeholder}</div>;
-  }
-
+  // If we have highlighted HTML (from cache or computed), render it directly
+  // No intermediate loading state when cached
   return (
     <div className={containerClass}>
-      {/* Truncation warning */}
       {isTruncated && (
         <div className="px-4 py-2 bg-muted/50 border-b text-xs text-muted-foreground flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-yellow-500" />
-          Content truncated for performance ({Math.round(code.length / 1024)}KB
-          total)
-        </div>
-      )}
-
-      {/* Loading indicator overlay */}
-      {isHighlighting && !highlightedHtml && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">
-            Highlighting syntax...
+          <span className="inline-block w-2 h-2 rounded-full bg-yellow-500 shrink-0" />
+          <span>
+            Content truncated for performance ({Math.round(code.length / 1024)}
+            KB total)
           </span>
         </div>
       )}
 
-      {/* Highlighted content */}
-      {highlightedHtml && (
+      {highlightedHtml ? (
         <div
           className={codeClass}
-          style={{ maxHeight }}
+          style={{ maxHeight, overflowY: "auto" }}
           dangerouslySetInnerHTML={{ __html: highlightedHtml }}
         />
-      )}
-
-      {/* Fallback: plain text if highlighting fails or not ready */}
-      {!highlightedHtml && !isHighlighting && (
-        <div className={codeClass} style={{ maxHeight }}>
+      ) : error ? (
+        <div className={codeClass} style={{ maxHeight, overflowY: "auto" }}>
           <pre className="px-4 py-4">
-            <code className="text-muted-foreground">{truncatedCode}</code>
+            <code className="text-muted-foreground whitespace-pre-wrap break-all">
+              {truncatedCode}
+            </code>
           </pre>
+        </div>
+      ) : (
+        // Loading: show plain code as stable placeholder — no layout shift
+        <div className="relative">
+          <div className={codeClass} style={{ maxHeight, overflowY: "auto" }}>
+            <pre className="px-4 py-4">
+              <code className="text-muted-foreground whitespace-pre-wrap break-all">
+                {truncatedCode}
+              </code>
+            </pre>
+          </div>
+          <div className="absolute top-3 right-3">
+            <div className="flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-md px-2 py-1 border text-xs text-muted-foreground">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              <span className="hidden sm:inline">Highlighting…</span>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Error state */}
       {error && (
         <div className="px-4 py-2 text-xs text-muted-foreground border-t">
           Syntax highlighting unavailable
         </div>
       )}
     </div>
-  );
-});
+  )
+})
